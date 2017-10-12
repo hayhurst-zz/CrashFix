@@ -89,20 +89,21 @@ class Thread extends CActiveRecord
 			return false;
 		
 		$title = '';
-		
+		$length = 0;
 		// Walk through stack frames
 		foreach($stackFrames as $stackFrame)
 		{
-			$title = $stackFrame->title;
+			if ($length >= 3) break;
+            		if(isset($stackFrame->module))
+            		{
+                		// Ingore this stack frame if it belongs to CrashRpt module
+                		if(0!=preg_match('/^CrashRpt([0-9]{4})(d{0,1}){0,1}\.dll$/', $stackFrame->module->name))
+                    		continue;	
+            		}
 			
-            if(isset($stackFrame->module))
-            {
-                // Ingore this stack frame if it belongs to CrashRpt module
-                if(0!=preg_match('/^CrashRpt([0-9]{4})(d{0,1}){0,1}\.dll$/', $stackFrame->module->name))
-                    continue;	
-            }
-			
-			break;
+			//$title = $stackFrame->title;
+			$title .= $stackFrame->getTitle();
+			$length++;
 		}
 		
 		// Return stack frame title.
