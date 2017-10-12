@@ -8,6 +8,14 @@
 #include "DumpStruct.h"
 #include "PeStruct.h"
 
+#ifdef _WIN32
+#include "strconv.h"
+#include "StackFrame.h"
+#include <mutex>
+static StackFrameDumper g_winFrameDumper;
+static std::mutex g_winFrameDumperMutex;
+#endif
+
 CStackWalker::CStackWalker()
 {
     m_pMdmpReader = NULL;
@@ -99,6 +107,28 @@ bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD 
         }
     }
 
+	// initialize debug helper, if under win32
+#ifdef _WIN32
+	static bool g_winFrameDumper_initilaized = false;
+	{
+		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
+		if (!g_winFrameDumper_initilaized) {
+			if (g_winFrameDumper.init() != S_OK) {
+				m_sErrorMsg = L"Failed to initialize debug dumper!";
+				return false;
+			}
+			g_winFrameDumper_initilaized = true;
+			if (pPdbCache) {
+				auto pdbs = pPdbCache->GetSearchDirs();
+				if (g_winFrameDumper.set_direcoties(pdbs.c_str()) != S_OK) {
+					m_sErrorMsg = L"Failed to load pdbs!";
+					return false;
+				}
+			}
+		}
+	}
+
+#endif
     // Done
 	m_sErrorMsg = L"Success";
 	bResult = true;
@@ -129,14 +159,31 @@ CStackFrame* CStackWalker::GetStackFrame()
 
 BOOL CStackWalker::FirstStackFrame()
 {
+#ifdef _WIN32
+	{
+		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
+		m_winStackFrames = g_winFrameDumper.dumpFrame(
+			m_pMdmpReader->GetFileName().c_str(), m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC
+		);
+	}
+#endif
     return NextStackFrame(TRUE);
 }
 
 BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
 {
-    DWORD dwValue = 0;
-    DWORD dwBytesRead = 0;
-
+#ifdef _WIN32
+	if (bFirstFrame) m_winStackIdx = 0;
+	if (m_winStackIdx >= m_winStackFrames.size()) return false;
+	m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
+	m_StackFrame.m_dwOffsInSymbol = m_winStackFrames[m_winStackIdx].methodOffset; // TODO: check
+	m_StackFrame.m_sPdbFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].moduleName); // TODO:
+	m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].srcFileName); // TODO:
+	m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset; // TODO:
+	m_winStackIdx++;
+	return true;
+#endif
+	DWORD dwBytesRead = 0;
     if(!bFirstFrame)
     {
         // Check infinite loop
@@ -272,6 +319,7 @@ BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
 
     if(!bAMD64) // x86
     {
+		DWORD dwValue = 0;
 		if(!bFirstFrame)
         {
             // Read prev base pointer
@@ -283,14 +331,34 @@ BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
         }
 
         // Read return address
-        BOOL bRead = m_pMdmpReader->ReadMemory(m_StackFrame.m_dwAddrFrame+4, &dwValue, sizeof(DWORD), &dwBytesRead);
+        BOOL bRead = m_pMdmpReader->ReadMemory(m_StackFrame.m_dwAddrFrame+ sizeof(dwValue), &dwValue, sizeof(DWORD), &dwBytesRead);
         if(!bRead || dwBytesRead!=sizeof(DWORD))
             return FALSE;
+		m_StackFrame.m_dwAddrReturn = dwValue;
     }
+	else // x64
+	{
+		DWORD64 dwValue = 0;
+		if (!bFirstFrame)
+		{
+			// Read prev base pointer
+			BOOL bRead = m_pMdmpReader->ReadMemory(m_StackFrame.m_dwAddrFrame, &dwValue, sizeof(dwValue), &dwBytesRead);
+			if (!bRead || dwBytesRead != sizeof(dwValue))
+				return FALSE;
+
+			m_StackFrame.m_dwAddrFrame = dwValue;
+		}
+
+		// Read return address
+		BOOL bRead = m_pMdmpReader->ReadMemory(m_StackFrame.m_dwAddrFrame + sizeof(dwValue), &dwValue, sizeof(dwValue), &dwBytesRead);
+		if (!bRead || dwBytesRead != sizeof(dwValue))
+			return FALSE;
+		m_StackFrame.m_dwAddrReturn = dwValue;
+	}
 
     // Set stack frame fields
 
-    m_StackFrame.m_dwAddrReturn = dwValue;
+    
     m_StackFrame.m_pFuncTableEntry = FALSE;
     m_StackFrame.m_bFar = FALSE;
     m_StackFrame.m_bVirtual = FALSE;
@@ -430,9 +498,9 @@ BOOL CStackWalker::UndoAMD64Prolog(CPeReader* pPeReader, DWORD dwUnwindInfoRVA, 
         case UWOP_ALLOC_LARGE: // Allocate a large-sized area on the stack.
             {
                 // There are two forms. If the operation info equals 0, then the size of the allocation
-                // divided by 8 is recorded in the next slot, allowing an allocation up to 512K – 8. If
+                // divided by 8 is recorded in the next slot, allowing an allocation up to 512K ?8. If
                 // the operation info equals 1, then the unscaled size of the allocation is recorded in
-                // the next two slots in little-endian format, allowing allocations up to 4GB – 8.
+                // the next two slots in little-endian format, allowing allocations up to 4GB ?8.
 
                 if(UnwindCode.OpInfo==0)
                 {

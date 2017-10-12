@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[])
 {
-    printf("dumper version " LIBDUMPER_VER " build date "__DATE__" "__TIME__"\n");
+    printf("dumper version " LIBDUMPER_VER " build date " __DATE__ " " __TIME__ "\n");
 
     CCommandProcessor cp;
 

@@ -5,15 +5,17 @@
 
 #pragma once
 
-#ifdef _WIN32
-#define PRIu64 "llu"
-#define PRIx64 "llx"
-#define PRIX64 "llx"
-#define PRIX64W L"llx"
-#else
+//#ifdef _WIN32
+//#define PRIu64 "llu"
+//#define PRIx64 "llx"
+//#define PRIX64 "llx"
+//#define PRIX64W L"llx"
+//#else
+//#define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
+//#endif
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
-#endif
 
 #include <stdio.h>
 

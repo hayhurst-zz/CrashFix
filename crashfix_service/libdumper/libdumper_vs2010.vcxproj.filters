@@ -138,6 +138,9 @@
     <ClCompile Include="Config.cpp">
       <Filter>Misc</Filter>
     </ClCompile>
+    <ClCompile Include="StackFrame.cpp">
+      <Filter>Misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasePdbStream.h">
@@ -285,6 +288,9 @@
       <Filter>FileUpload</Filter>
     </ClInclude>
     <ClInclude Include="Config.h">
+      <Filter>Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="StackFrame.h">
       <Filter>Misc</Filter>
     </ClInclude>
   </ItemGroup>

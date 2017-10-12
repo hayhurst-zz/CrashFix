@@ -41,3 +41,14 @@
 /crashfix_webapp/assets
 /crashfix_webapp/nbproject
 /crashfix_webapp/protected/runtime
+*.tlog
+*.pdb
+*.pch
+*.db
+*.opendb
+*.obj
+*.log
+*.ipch
+*.idb
+*.iobj
+*.ipdb

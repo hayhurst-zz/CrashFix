@@ -97,6 +97,8 @@ public:
 	//! @return true if entry has been found and deleted; returns false if entry not found in cache.
 	bool DeleteCachedFile(std::wstring sPath, bool bDeleteFile);
 
+	std::string GetSearchDirs()const;
+
 private:
 
 	enum eFindExistingEntryResult

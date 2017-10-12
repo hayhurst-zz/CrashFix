@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "MiniDumpReader.h"
 #include "PdbCache.h"
+#include "StackFrame.h"
 
 //! \class CStackFrame
 //! \brief Stack frame.
@@ -115,5 +116,10 @@ private:
 	bool m_bExactMatchBuildAge;       //!< If to require exact match of PDB build age.
     CStackFrame m_StackFrame;       //!< Current stack frame
     std::wstring m_sErrorMsg;       //!< Last error message
+#ifdef _WIN32
+	std::vector<StackFrameItem> m_winStackFrames;
+	std::size_t m_winStackIdx;
+#endif // _WIN32
+
 };
 

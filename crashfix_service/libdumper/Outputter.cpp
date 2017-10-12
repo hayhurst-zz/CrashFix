@@ -18,12 +18,14 @@ void COutputter::BeginDocument(LPCSTR pszTitle)
 	}
 	else if(m_OutFmt==OUTPUT_XML)
 	{
-		TiXmlNode* root = new TiXmlElement("DocumentRoot");
-		m_doc.LinkEndChild(root);
+		//TiXmlNode* root = new TiXmlElement("DocumentRoot");
+		//m_doc.LinkEndChild(root);
+		auto root = m_doc.InsertEndChild(TiXmlElement("DocumentRoot"));
+		m_doc.InsertBeforeChild(root, TiXmlDeclaration("1.0", "UTF-8", ""));
 
-		TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
-		m_doc.InsertBeforeChild(root, *decl);
-		delete decl;
+		//TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "UTF-8", "" );
+		//m_doc.InsertBeforeChild(root, *decl);
+		//delete decl;
 	}
 }
 
@@ -36,6 +38,7 @@ void COutputter::EndDocument()
 	else if(m_OutFmt==OUTPUT_XML)
 	{
 		m_doc.SaveFile(m_fOut);
+		m_doc.Clear();
 	}
 }
 
@@ -62,9 +65,10 @@ void COutputter::BeginSection(LPCSTR pszTitle, ...)
         vsprintf(szBuffer, pszTitle, args);
 #endif
 		TiXmlHandle hRoot = m_doc.RootElement();
-		TiXmlHandle hElem = new TiXmlElement(szBuffer);
-		hRoot.ToNode()->LinkEndChild(hElem.ToNode());
-		m_pCurSection = hElem.ToElement();
+		//TiXmlHandle hElem = new TiXmlElement(szBuffer);
+		//hRoot.ToNode()->LinkEndChild(hElem.ToNode());
+		//m_pCurSection = hElem.ToElement();
+		m_pCurSection = hRoot.ToNode()->InsertEndChild(TiXmlElement(szBuffer))->ToElement();
 	}
 }
 
@@ -89,9 +93,10 @@ void COutputter::BeginTableRow()
 	}
 	else if(m_OutFmt==OUTPUT_XML)
 	{
-		TiXmlHandle hElem = new TiXmlElement("Row");
-		m_pCurSection->LinkEndChild(hElem.ToNode());
-		m_pCurRow = hElem.ToElement();
+		//TiXmlHandle hElem = new TiXmlElement("Row");
+		//m_pCurSection->LinkEndChild(hElem.ToNode());
+		//m_pCurRow = hElem.ToElement();
+		m_pCurRow = m_pCurSection->InsertEndChild(TiXmlElement("Row"))->ToElement();
 	}
 }
 
@@ -129,10 +134,12 @@ void COutputter::PutRecord(LPCSTR pszName, LPCSTR pszValue, ...)
         vsprintf(szBuffer, pszValue, args);
 #endif
 
-		TiXmlHandle hElem = new TiXmlElement(pszName);
-		m_pCurSection->LinkEndChild(hElem.ToNode());
-		TiXmlText* text = new TiXmlText(szBuffer);
-		hElem.ToElement()->LinkEndChild(text);
+		//TiXmlHandle hElem = new TiXmlElement(pszName);
+		//m_pCurSection->LinkEndChild(hElem.ToNode());
+		//TiXmlText* text = new TiXmlText(szBuffer);
+		//hElem.ToElement()->LinkEndChild(text);
+		m_pCurSection->InsertEndChild(TiXmlElement(pszName))->ToElement()->InsertEndChild(TiXmlText(szBuffer));
+
 	}
 }
 
@@ -178,8 +185,9 @@ void COutputter::PutTableCell(int width, bool bLastInRow, LPCSTR szFormat, ...)
 #endif
 		szBuffer[BUFF_SIZE]='\0'; // ensure zero-terminated
 
-		TiXmlHandle hElem = new TiXmlElement("Cell");
-		m_pCurRow->LinkEndChild(hElem.ToNode());
-		hElem.ToElement()->SetAttribute("val", szBuffer);
+		//TiXmlHandle hElem = new TiXmlElement("Cell");
+		//m_pCurRow->LinkEndChild(hElem.ToNode());
+		//hElem.ToElement()->SetAttribute("val", szBuffer);
+		m_pCurRow->InsertEndChild(TiXmlElement("Cell"))->ToElement()->SetAttribute("val", szBuffer);
 	}
 }

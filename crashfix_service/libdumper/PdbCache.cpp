@@ -2,7 +2,6 @@
 //! \brief PDB file cache.
 //! \author Oleg Krivtsov
 //! \date 2011
-
 #include "stdafx.h"
 #include "PdbCache.h"
 #include "strconv.h"
@@ -1178,6 +1177,16 @@ bool CPdbCache::DeleteCachedFile(std::wstring sPath, bool bDeleteFile)
 cleanup:
 
 	return bStatus;
+}
+
+std::string CPdbCache::GetSearchDirs() const
+{
+	std::string result;
+	for (auto& dir : m_aSearchDirs) {
+		auto dirName = strconv::w2a(dir.first);
+		result += "\"" + dirName + "\";";
+	}
+	return result;
 }
 
 bool CPdbCache::EraseCacheEntry(int nEntry)

@@ -2,7 +2,6 @@
 //! \brief Minidump reader.
 //! \author Oleg Krivtsov
 //! \date 2011
-
 #include "stdafx.h"
 #include "DumpStruct.h"
 #include "MiniDumpReader.h"
@@ -24,7 +23,7 @@ BOOL CMiniDumpReader::Init(std::wstring sFileName)
 {
     ULONG32 uOffs = 0;
     ULONG i = 0;
-
+	m_filename = sFileName;
     if(m_bInitialized)
     {
         Destroy();
@@ -944,6 +943,11 @@ MiniDumpBlockInfo* CMiniDumpReader::GetLayoutBlock(int nBlock)
     for(i=0; i<nBlock; i++) it++;
 
     return &it->second;
+}
+
+std::string CMiniDumpReader::GetFileName() const
+{
+	return strconv::w2a(m_filename);
 }
 
 MiniDumpMiscInfo* CMiniDumpReader::GetMiscInfo()

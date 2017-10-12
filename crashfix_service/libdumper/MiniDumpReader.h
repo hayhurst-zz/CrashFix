@@ -331,6 +331,8 @@ public:
     //! Returns block by its zero-based index
     MiniDumpBlockInfo* GetLayoutBlock(int nBlock);
 
+	std::string GetFileName()const;
+
 private:
 
     //! Reads system info stream
@@ -372,6 +374,6 @@ private:
     std::map<DWORD, int> m_ThreadIndex;           //!< Index for fast accessing threads by thread ID
     std::vector<MiniDumpMemRange> m_aMemRanges;   //!< Memory ranges
     std::multimap<ULONG, MiniDumpBlockInfo> m_Layout;    //!< Minidump internal layout
-
+	std::wstring m_filename;
 };
 
