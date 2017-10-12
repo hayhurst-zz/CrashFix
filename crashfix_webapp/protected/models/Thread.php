@@ -102,7 +102,7 @@ class Thread extends CActiveRecord
             		}
 			
 			//$title = $stackFrame->title;
-			$title .= $stackFrame->getTitle();
+			$title .= $stackFrame->getShortTitle();
 			$length++;
 		}
 		
