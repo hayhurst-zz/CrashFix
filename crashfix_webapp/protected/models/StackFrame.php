@@ -105,4 +105,44 @@ class StackFrame extends CActiveRecord
 		
 		return $title;
 	}
+	
+	public function getShortTitle()
+	{
+		$title = "";
+		
+		// Check if this is a special frame [UnwindInfoNotAvail]
+		if($this->addr_pc==0 && $this->module_id==0)
+		{
+			$title = '[unavailable]';
+			return $title;
+		}
+		
+		// Check if symbol name available
+		if(isset($this->symbol_name))
+		{
+			if(isset($this->module_id) && isset($this->module))
+			{
+				$moduleName = $this->module->name;
+				$title = $title.$moduleName.'! ';			
+			}
+			
+			if(isset($this->symbol_name))
+				$title = $title.$this->symbol_name.' ';
+			$title.='+0x'.dechex($this->offs_in_symbol).' ';
+		}
+		else // Symbol name not available
+		{		
+			if(isset($this->module_id) && isset($this->module))
+			{
+                		$moduleName = $this->module->name;
+                		$title = $title.$moduleName.'!+0x'.dechex($this->offs_in_module);			                                				
+			}
+			else
+			{
+				$title = '0x'.dechex($this->addr_pc);			
+			}
+		}		
+		
+		return $title;
+	}
 }
