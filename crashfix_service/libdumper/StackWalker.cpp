@@ -175,11 +175,21 @@ BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
 #ifdef _WIN32
 	if (bFirstFrame) m_winStackIdx = 0;
 	if (m_winStackIdx >= m_winStackFrames.size()) return false;
+	//m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
+	//m_StackFrame.m_sUndecoratedSymbolName = m_StackFrame.m_sSymbolName; // TODO
+	//m_StackFrame.m_dwOffsInSymbol = m_winStackFrames[m_winStackIdx].methodOffset; // TODO: check
+	//m_StackFrame.m_sPdbFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].moduleName); // TODO:
+	//m_StackFrame.m_sModuleName = strconv::a2w(m_winStackFrames[m_winStackIdx].moduleName);
+	//m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].srcFileName);
+	//m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset;
+
+	m_StackFrame.m_dwAddrPC = m_winStackFrames[m_winStackIdx].instructionAddr;
+	m_StackFrame.m_dwAddrReturn = m_winStackFrames[m_winStackIdx].returnAddr;
+	GetSymbolInfoForCurStackFrame();
+	// update missing info
 	m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
-	m_StackFrame.m_dwOffsInSymbol = m_winStackFrames[m_winStackIdx].methodOffset; // TODO: check
-	m_StackFrame.m_sPdbFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].moduleName); // TODO:
 	m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].srcFileName); // TODO:
-	m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset; // TODO:
+	m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset;
 	m_winStackIdx++;
 	return true;
 #endif
@@ -863,6 +873,7 @@ bool CStackWalker::GetSymbolInfoForCurStackFrame()
 	m_StackFrame.m_dwOffsInLine = 0;
 
     int nModuleIndex = m_pMdmpReader->FindModuleIndexByAddr(m_StackFrame.m_dwAddrPC);
+	//if (nModuleIndex == -1) nModuleIndex = m_pMdmpReader->FindModuleIndexByName(m_StackFrame.m_sModuleName);
     MiniDumpModuleInfo* pModuleInfo = m_pMdmpReader->GetModuleInfo(nModuleIndex);
     if(pModuleInfo)
     {

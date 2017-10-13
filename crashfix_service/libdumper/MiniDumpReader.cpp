@@ -440,6 +440,9 @@ BOOL CMiniDumpReader::ReadModuleListStream(ULONG uRva, ULONG uSize)
         size_t pos = m.m_sModuleName.rfind(L'\\');
         if(pos!=m.m_sModuleName.npos)
             sShortModuleName = sShortModuleName.substr(pos+1, std::string::npos);
+		pos = sShortModuleName.rfind(L'.');
+		if (pos != sShortModuleName.npos)
+			sShortModuleName = sShortModuleName.substr(0, pos);
         m.m_sShortModuleName = sShortModuleName;
 
         m_aModules.push_back(m);
@@ -874,6 +877,22 @@ int CMiniDumpReader::FindModuleIndexByAddr(DWORD64 Address)
 
     // Not found!
     return -1;
+}
+
+int CMiniDumpReader::FindModuleIndexByName(const std::wstring& name)
+{
+	int i;
+	for (i = 0; i < (int)m_aModules.size(); i++)
+	{
+		MiniDumpModuleInfo& mi = m_aModules[i];
+		if (mi.m_sModuleName == name || mi.m_sShortModuleName == name)
+		{
+			return i;
+		}
+	}
+
+	// Not found!
+	return -1;
 }
 
 int CMiniDumpReader::GetModuleCount()

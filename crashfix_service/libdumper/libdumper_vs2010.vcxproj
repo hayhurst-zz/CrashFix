@@ -215,6 +215,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasePdbStream.h" />
+    <ClInclude Include="BugStore.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="FileMapping.h" />
     <ClInclude Include="MsfFile.h" />

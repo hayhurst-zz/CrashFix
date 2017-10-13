@@ -293,5 +293,8 @@
     <ClInclude Include="StackFrame.h">
       <Filter>Misc</Filter>
     </ClInclude>
+    <ClInclude Include="BugStore.h">
+      <Filter>Misc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

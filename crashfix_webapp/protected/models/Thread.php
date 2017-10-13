@@ -80,7 +80,7 @@ class Thread extends CActiveRecord
 		// Look for uppermost stack frame.
 		$criteria=new CDbCriteria;
 		$criteria->compare('thread_id', $this->id);		
-		$criteria->addCondition('und_symbol_name IS NOT NULL');
+		$criteria->addCondition('symbol_name IS NOT NULL');
 		$criteria->order = 'id ASC';		
 		$stackFrames = StackFrame::model()->findAll($criteria);
 		
@@ -94,12 +94,12 @@ class Thread extends CActiveRecord
 		foreach($stackFrames as $stackFrame)
 		{
 			if ($length >= 3) break;
-            		if(isset($stackFrame->module))
-            		{
-                		// Ingore this stack frame if it belongs to CrashRpt module
-                		if(0!=preg_match('/^CrashRpt([0-9]{4})(d{0,1}){0,1}\.dll$/', $stackFrame->module->name))
-                    		continue;	
-            		}
+            		// if(isset($stackFrame->module))
+            		// {
+                	// 	// Ingore this stack frame if it belongs to CrashRpt module
+                	// 	if(0!=preg_match('/^CrashRpt([0-9]{4})(d{0,1}){0,1}\.dll$/', $stackFrame->module->name))
+                    // 		continue;	
+            		// }
 			
 			//$title = $stackFrame->title;
 			$title .= $stackFrame->getShortTitle();

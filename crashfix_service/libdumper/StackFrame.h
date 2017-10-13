@@ -12,18 +12,37 @@ struct StackFrameItem {
 	std::size_t methodOffset;
 	std::string srcFileName;
 	std::size_t srcLineOffset;
+	std::uint64_t childSP;
+	std::uint64_t returnAddr;
+	std::uint64_t instructionAddr;
+	std::size_t frameNumber;
 
 public:
 	bool from_dbg_string(const std::string& raw) {
-		static const std::regex matcher(R"(([^!]+)!([^\+]+)\+0x([0-9a-f]+) \[([^\]]+) @ ([0-9]+)\])");
+		moduleName.clear();
+		methodName.clear();
+		methodOffset = 0;
+		srcFileName.clear();
+		srcLineOffset = 0;
+		childSP = 0;
+		returnAddr = 0;
+		instructionAddr = 0;
+		frameNumber = 0;
+		static const std::regex matcher(R"(([0-9a-f]+) ([0-9a-f]+)`([0-9a-f]+) ([0-9a-f]+)`([0-9a-f]+) ([^!]+)!([^\+]+)\+0x([0-9a-f]+) \[([^\]]+) @ ([0-9]+)\])");
+		//                                --^^^^^^^^^---^^^^^^^^^^^^^^^^^^^^^---^^^^^^^^^^^^^^^^^^^^^---^^^^^---^^^^^^------^^^^^^^^^-----^^^^^^-----^^^^^^^^----
+		//                                  Frame Num   Calling PC              Return Address           Mod     Symbol      Symbol Off    Src Name   Src Line
+		
 		std::smatch matchResult;
 		if (std::regex_match(raw, matchResult, matcher)) {
-			if (matchResult.size() == 6) {
-				moduleName = matchResult[1].str();
-				methodName = matchResult[2].str();
-				methodOffset = static_cast<size_t>(std::stoull(matchResult[3].str(), nullptr, 16));
-				srcFileName = matchResult[4].str();
-				srcLineOffset = static_cast<size_t>(std::stoull(matchResult[5].str(), nullptr, 10));
+			if (matchResult.size() == 11) {
+				frameNumber = std::stoull(matchResult[1].str(), nullptr, 16);
+				childSP = (std::stoull(matchResult[2].str(), nullptr, 16) << 32) + std::stoull(matchResult[3].str(), nullptr, 16);
+				returnAddr = (std::stoull(matchResult[4].str(), nullptr, 16) << 32) + std::stoull(matchResult[5].str(), nullptr, 16);
+				moduleName = matchResult[6].str();
+				methodName = matchResult[7].str();
+				methodOffset = static_cast<size_t>(std::stoull(matchResult[8].str(), nullptr, 16));
+				srcFileName = matchResult[9].str();
+				srcLineOffset = static_cast<size_t>(std::stoull(matchResult[10].str(), nullptr, 10));
 				return true;
 			}
 		}
@@ -46,7 +65,10 @@ public:
 		StackFrameItem item;
 		std::vector<StackFrameItem> ret;
 		while (std::getline(buffer,line)) {
-			if (item.from_dbg_string(line)) ret.push_back(item);
+			if (item.from_dbg_string(line)) {
+				item.instructionAddr = pFrames[item.frameNumber].InstructionOffset;
+				ret.push_back(item);
+			}
 			// TODO: else?
 		}
 		clear();
@@ -58,8 +80,16 @@ public:
 		buffer.str(std::string()); // TODO
 	}
 
+	bool setFrames(DEBUG_STACK_FRAME* ptr, std::size_t count) {
+		pFrames = ptr;
+		frameCount = count;
+		return true;
+	}
+
 private:
 	std::stringstream buffer;
+	DEBUG_STACK_FRAME* pFrames=nullptr;
+	std::size_t frameCount=0;
 };
 
 class StackFrameDumper {
@@ -119,9 +149,10 @@ public:
 					static constexpr ULONG FrameBufSize = 32;
 					DEBUG_STACK_FRAME frames[FrameBufSize];
 					if (control->GetStackTrace(frameOffset, stackOffset, instructionOffset, frames, FrameBufSize, &filled) == S_OK &&
+						callback.setFrames(frames, filled) &&
 						control->OutputStackTrace(
 							DEBUG_OUTCTL_ALL_CLIENTS, frames, filled,
-							DEBUG_STACK_SOURCE_LINE | DEBUG_STACK_FUNCTION_INFO
+							DEBUG_STACK_SOURCE_LINE | DEBUG_STACK_FRAME_ADDRESSES | DEBUG_STACK_FRAME_NUMBERS
 						) == S_OK &&
 						client->FlushCallbacks() == S_OK) {
 						client->EndSession(DEBUG_END_ACTIVE_TERMINATE);

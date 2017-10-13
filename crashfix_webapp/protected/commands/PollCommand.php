@@ -856,7 +856,8 @@ class PollCommand extends CConsoleCommand
 					
 					$stackFrame = new StackFrame;					
 					$stackFrame->thread_id = $thread->id;
-					$stackFrame->addr_pc = $addrPC;					
+					$stackFrame->addr_pc = $addrPC;
+					$stackFrame->module_name = $moduleName;					
 					
 					if(strlen($moduleName)!=0)
 					{

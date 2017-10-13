@@ -72,13 +72,13 @@ class StackFrame extends CActiveRecord
 			if(isset($this->module_id) && isset($this->module))
 			{
 				$moduleName = $this->module->name;
-				$title = $title.$moduleName.'! ';			
+				$title = $title.$moduleName.'!';			
 			}
 			
-			if(isset($this->und_symbol_name))
-				$title = $title.$this->und_symbol_name.' ';
-			else if(isset($this->symbol_name))
-				$title = $title.$this->symbol_name.' ';
+			if(isset($this->symbol_name))
+				$title = $title.$this->symbol_name;
+			else if(isset($this->und_symbol_name))
+				$title = $title.$this->und_symbol_name;
 			$title.='+0x'.dechex($this->offs_in_symbol).' ';
 
 			if(isset($this->src_file_name) && isset($this->src_line))
@@ -117,30 +117,18 @@ class StackFrame extends CActiveRecord
 			return $title;
 		}
 		
-		// Check if symbol name available
-		if(isset($this->symbol_name))
+		// Use module name + short symbol name + symbol offset if possible
+		if(isset($this->module_id) && isset($this->module) && isset($this->src_line))
 		{
-			if(isset($this->module_id) && isset($this->module))
-			{
-				$moduleName = $this->module->name;
-				$title = $title.$moduleName.'! ';			
-			}
-			
-			if(isset($this->symbol_name))
-				$title = $title.$this->symbol_name.' ';
+			$moduleName = $this->module->name;
+			$title = $title.$moduleName.'!';
+			if (isset($this->symbol_name))
+			$title = $title.$this->symbol_name;
 			$title.='+0x'.dechex($this->offs_in_symbol).' ';
 		}
-		else // Symbol name not available
+		else // Module name unavailable, return address
 		{		
-			if(isset($this->module_id) && isset($this->module))
-			{
-                		$moduleName = $this->module->name;
-                		$title = $title.$moduleName.'!+0x'.dechex($this->offs_in_module);			                                				
-			}
-			else
-			{
-				$title = '0x'.dechex($this->addr_pc);			
-			}
+			$title = '0x'.dechex($this->addr_pc);
 		}		
 		
 		return $title;

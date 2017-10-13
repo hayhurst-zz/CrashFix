@@ -291,6 +291,8 @@ public:
     //! @param[in] Address Memory address.
     int FindModuleIndexByAddr(DWORD64 Address);
 
+	int FindModuleIndexByName(const std::wstring& name);
+
     //! Returns count of modules.
     int GetModuleCount();
 
