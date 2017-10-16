@@ -371,12 +371,12 @@ void CUploader::InternalUploadFiles()
 			continue; // This is not a valid PDB file
 		}
 
-		if(PdbReader.IsAMD64())
-		{
-			m_Stats.m_nIgnored++; 
-			SetFileStatus(i, FUS_INVALID);						
-			continue; // This is not a valid PDB file
-		}
+		//if(PdbReader.IsAMD64())
+		//{
+		//	m_Stats.m_nIgnored++; 
+		//	SetFileStatus(i, FUS_INVALID);						
+		//	continue; // This is not a valid PDB file
+		//}
 
 		CPdbHeadersStream* pHeaders = PdbReader.GetHeadersStream();
 		if(pHeaders==NULL)

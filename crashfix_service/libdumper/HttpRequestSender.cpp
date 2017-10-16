@@ -161,7 +161,10 @@ BOOL CHttpRequestSender::InternalSend()
     // Send request
     if(!HttpSendRequestEx( hRequest, &BufferIn, NULL, 0, 0))
     {
-        m_Assync->SetProgress(_T("HttpSendRequestEx has failed."), 0);
+		auto lasterr = GetLastError();
+		auto lasterrStr = std::to_wstring(lasterr);
+		lasterrStr = L"HttpSendRequestEx has failed: " + lasterrStr;
+        m_Assync->SetProgress(lasterrStr.c_str(), 0);
         goto cleanup;
     }
 

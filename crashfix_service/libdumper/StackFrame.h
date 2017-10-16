@@ -125,6 +125,15 @@ public:
 		HRESULT status = S_OK;
 		if (symbol_dirs) {
 			status = symbols->SetSymbolPath(symbol_dirs);
+			auto symbolStoreEnvName = "_NT_SYMBOL_PATH";
+			auto symbolStoreSize = GetEnvironmentVariableA(symbolStoreEnvName, nullptr, 0);
+			if (symbolStoreSize != 0) {
+				auto store = new char[symbolStoreSize]();
+				if (GetEnvironmentVariableA(symbolStoreEnvName, store, symbolStoreSize) != 0) {
+					status = symbols->AppendSymbolPath(store);
+				}
+				delete[] store;
+			}
 			if (status != S_OK) return status;
 		}
 
