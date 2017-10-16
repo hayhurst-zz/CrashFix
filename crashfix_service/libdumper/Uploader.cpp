@@ -361,37 +361,49 @@ void CUploader::InternalUploadFiles()
 
 		SetFileStatus(i, FUS_CHECKING);
 
-		// Open PDB file to extract its GUID
-		CPdbReader PdbReader;
-		BOOL bInit = PdbReader.Init(pfi->m_sFileName);
-		if(!bInit)
-		{
-			m_Stats.m_nIgnored++; 
-			SetFileStatus(i, FUS_INVALID);			
-			continue; // This is not a valid PDB file
+		std::wstring dirc;
+		std::wstring fileName;
+		std::wstring baseFileName;
+		std::wstring extension;
+		std::wstring sGUIDnAge;
+		SplitFileName(pfi->m_sFileName, dirc, fileName, baseFileName, extension);
+		if (extension == L"pdb") {
+			// Open PDB file to extract its GUID
+			CPdbReader PdbReader;
+			BOOL bInit = PdbReader.Init(pfi->m_sFileName);
+			if(!bInit)
+			{
+				m_Stats.m_nIgnored++; 
+				SetFileStatus(i, FUS_INVALID);			
+				continue; // This is not a valid PDB file
+			}
+
+			//if(PdbReader.IsAMD64())
+			//{
+			//	m_Stats.m_nIgnored++; 
+			//	SetFileStatus(i, FUS_INVALID);						
+			//	continue; // This is not a valid PDB file
+			//}
+
+			CPdbHeadersStream* pHeaders = PdbReader.GetHeadersStream();
+			if(pHeaders==NULL)
+			{
+				m_Stats.m_nIgnored++; 
+				SetFileStatus(i, FUS_INVALID);						
+				continue; // This is not a valid PDB file
+			}
+
+			std::wstring sGUID = pHeaders->GetGUID();
+			DWORD dwAge = pHeaders->GetAge();
+			std::wstringstream wstream;
+			wstream << sGUID;
+			wstream << dwAge;
+			sGUIDnAge = wstream.str();
+			}
+		else {
+			CalcFileMD5Hash(pfi->m_sFileName, sGUIDnAge);
 		}
-
-		//if(PdbReader.IsAMD64())
-		//{
-		//	m_Stats.m_nIgnored++; 
-		//	SetFileStatus(i, FUS_INVALID);						
-		//	continue; // This is not a valid PDB file
-		//}
-
-		CPdbHeadersStream* pHeaders = PdbReader.GetHeadersStream();
-		if(pHeaders==NULL)
-		{
-			m_Stats.m_nIgnored++; 
-			SetFileStatus(i, FUS_INVALID);						
-			continue; // This is not a valid PDB file
-		}
-
-		std::wstring sGUID = pHeaders->GetGUID();
-		DWORD dwAge = pHeaders->GetAge();
-		std::wstringstream wstream;
-		wstream << sGUID;
-		wstream << dwAge;
-		std::wstring sGUIDnAge = wstream.str();
+		
 
 		// First check if such a file is already in the database
 		CHttpRequest HttpRequest;
