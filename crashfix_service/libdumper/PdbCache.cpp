@@ -1184,7 +1184,7 @@ std::string CPdbCache::GetSearchDirs() const
 	std::string result;
 	for (auto& dir : m_aSearchDirs) {
 		auto dirName = strconv::w2a(dir.first);
-		result += "\"" + dirName + "\";";
+		result += /*"\"" +*/ dirName + /*"\*/";";
 	}
 	return result;
 }
