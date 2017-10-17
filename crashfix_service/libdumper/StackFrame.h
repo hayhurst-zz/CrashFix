@@ -80,7 +80,7 @@ public:
 		buffer.str(std::string()); // TODO
 	}
 
-	bool setFrames(DEBUG_STACK_FRAME* ptr, std::size_t count) {
+	bool setFrames(DEBUG_STACK_FRAME_EX* ptr, std::size_t count) {
 		pFrames = ptr;
 		frameCount = count;
 		return true;
@@ -88,13 +88,13 @@ public:
 
 private:
 	std::stringstream buffer;
-	DEBUG_STACK_FRAME* pFrames=nullptr;
+	DEBUG_STACK_FRAME_EX* pFrames=nullptr;
 	std::size_t frameCount=0;
 };
 
 class StackFrameDumper {
 	IDebugClient4* client;
-	IDebugControl4* control;
+	IDebugControl5* control;
 	IDebugSymbols3* symbols;
 	StackFrameDumperCallback callback;
 
@@ -110,7 +110,7 @@ public:
 		HRESULT status = S_OK;
 		status = DebugCreate(__uuidof(IDebugClient4), (void**)&client);
 		if (status != S_OK) return status;
-		status = client->QueryInterface(__uuidof(IDebugControl4), (void**)&control);
+		status = client->QueryInterface(__uuidof(IDebugControl5), (void**)&control);
 		if (status != S_OK) return status;
 		status = client->QueryInterface(__uuidof(IDebugSymbols3), (void**)&symbols);
 		if (status != S_OK) return status;
@@ -125,15 +125,17 @@ public:
 		HRESULT status = S_OK;
 		if (symbol_dirs) {
 			status = symbols->SetSymbolPath(symbol_dirs);
-			auto symbolStoreEnvName = "_NT_SYMBOL_PATH";
-			auto symbolStoreSize = GetEnvironmentVariableA(symbolStoreEnvName, nullptr, 0);
-			if (symbolStoreSize != 0) {
-				auto store = new char[symbolStoreSize]();
-				if (GetEnvironmentVariableA(symbolStoreEnvName, store, symbolStoreSize) != 0) {
-					status = symbols->AppendSymbolPath(store);
-				}
-				delete[] store;
-			}
+			//auto symbolStoreEnvName = "_NT_SYMBOL_PATH";
+			//auto symbolStoreSize = GetEnvironmentVariableA(symbolStoreEnvName, nullptr, 0);
+			//if (symbolStoreSize != 0) {
+			//	auto store = new char[symbolStoreSize]();
+			//	if (GetEnvironmentVariableA(symbolStoreEnvName, store, symbolStoreSize) != 0) {
+			//		status = symbols->AppendSymbolPath(store);
+			//	}
+			//	delete[] store;
+			//}
+			if (status != S_OK) return status;
+			status = symbols->SetImagePath(symbol_dirs);
 			if (status != S_OK) return status;
 		}
 
@@ -156,15 +158,18 @@ public:
 				if (symbols->SetScopeFromStoredEvent() == S_OK) {
 					ULONG filled;
 					static constexpr ULONG FrameBufSize = 32;
-					DEBUG_STACK_FRAME frames[FrameBufSize];
-					if (control->GetStackTrace(frameOffset, stackOffset, instructionOffset, frames, FrameBufSize, &filled) == S_OK &&
+					DEBUG_STACK_FRAME_EX frames[FrameBufSize];
+					if (control->GetStackTraceEx(frameOffset, stackOffset, instructionOffset, frames, FrameBufSize, &filled) == S_OK &&
 						callback.setFrames(frames, filled) &&
-						control->OutputStackTrace(
+						control->OutputStackTraceEx(
 							DEBUG_OUTCTL_ALL_CLIENTS, frames, filled,
 							DEBUG_STACK_SOURCE_LINE | DEBUG_STACK_FRAME_ADDRESSES | DEBUG_STACK_FRAME_NUMBERS
 						) == S_OK &&
 						client->FlushCallbacks() == S_OK) {
 						client->EndSession(DEBUG_END_ACTIVE_TERMINATE);
+						for (auto i = 0; i < filled; ++i) {
+							std::cout << frames[i].FrameNumber << ": " << frames[i].InstructionOffset << std::endl;
+						}
 						return callback.build();
 					}
 				}

@@ -20,6 +20,7 @@ STDMETHODIMP StackFrameDumperCallback::Output(THIS_ _In_ ULONG Mask, _In_ PCSTR 
 {
 	UNREFERENCED_PARAMETER(Mask); // TODO
 	buffer << Text;
+	std::cout << Text;
 	buffer.flush(); // TODO
 	return S_OK;
 }
