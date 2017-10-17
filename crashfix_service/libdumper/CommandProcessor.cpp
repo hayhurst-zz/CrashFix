@@ -1485,37 +1485,46 @@ int CCommandProcessor::ImportPdb(LPCWSTR szPdbFileName, LPCWSTR szSymDir, LPCWST
         goto exit;
     }
 
-    // Read PDB file
-	bInit = PdbReader.Init(sPdbFileName.c_str());
-    if(!bInit)
-    {
-		nStatus = 2;
-        m_sErrorMsg = "Input file is not a valid PDB file.";
-        goto exit;
-    }
+	SplitFileName(szPdbFileName, sDir, sFile, sBaseFileName, sExtension);
 
-    // Get headers stream
-    pHeaders = PdbReader.GetHeadersStream();
-    if(pHeaders==NULL)
-    {
-		nStatus = 2;
-        m_sErrorMsg = "Error retrieving headers stream from PDB file.";
-        goto exit;
-    }
+	if (sExtension == L"pdb") {
+		// Read PDB file
+		bInit = PdbReader.Init(sPdbFileName.c_str());
+		if (!bInit)
+		{
+			nStatus = 2;
+			m_sErrorMsg = "Input file is not a valid PDB file.";
+			goto exit;
+		}
 
-	//if(PdbReader.IsAMD64())
-	//{
-	//	nStatus = 2;
- //       m_sErrorMsg = "Unsupported architecture.";
- //       goto exit;
-	//}
+		// Get headers stream
+		pHeaders = PdbReader.GetHeadersStream();
+		if (pHeaders == NULL)
+		{
+			nStatus = 2;
+			m_sErrorMsg = "Error retrieving headers stream from PDB file.";
+			goto exit;
+		}
 
-    // Get GUID
-    sGUID = pHeaders->GetGUID();
-	// Get age
-	dwAge = pHeaders->GetAge();
+		//if(PdbReader.IsAMD64())
+		//{
+		//	nStatus = 2;
+		//       m_sErrorMsg = "Unsupported architecture.";
+		//       goto exit;
+		//}
 
-    SplitFileName(szPdbFileName, sDir, sFile, sBaseFileName, sExtension);
+		// Get GUID
+		sGUID = pHeaders->GetGUID();
+		// Get age
+		dwAge = pHeaders->GetAge();
+	}
+	else {
+		CalcFileMD5Hash(sPdbFileName, sGUID);
+		dwAge = 1; // FIXME?
+	}
+    
+
+    
 
     // Format subdir name
     sSubDirName += sOutDir;
