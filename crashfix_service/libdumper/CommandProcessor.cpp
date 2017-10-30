@@ -1176,8 +1176,8 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 		for(i=0; i<pMiniDump->GetThreadCount(); i++)
 		{
 			MiniDumpThreadInfo* pThread = pMiniDump->GetThreadInfo(i);
-			if(!pThread)
-				break;
+			if(!pThread) break;
+			if (pThread->m_uThreadId != pExcInfo->m_uThreadId) continue;
 
 			doc.BeginSection("StackTrace");
 			doc.PutRecord("ThreadID", "%d", pThread->m_uThreadId);
