@@ -167,9 +167,9 @@ public:
 						) == S_OK &&
 						client->FlushCallbacks() == S_OK) {
 						client->EndSession(DEBUG_END_ACTIVE_TERMINATE);
-						for (auto i = 0; i < filled; ++i) {
-							std::cout << frames[i].FrameNumber << ": " << frames[i].InstructionOffset << std::endl;
-						}
+						//for (auto i = 0; i < filled; ++i) {
+						//	std::cout << frames[i].FrameNumber << ": " << frames[i].InstructionOffset << std::endl;
+						//}
 						return callback.build();
 					}
 				}
