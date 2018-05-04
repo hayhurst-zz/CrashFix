@@ -28,12 +28,16 @@ public:
 		returnAddr = 0;
 		instructionAddr = 0;
 		frameNumber = 0;
-		static const std::regex matcher(R"(([0-9a-f]+) ([0-9a-f]+)`([0-9a-f]+) ([0-9a-f]+)`([0-9a-f]+) ([^!]+)!([^\+]+)\+0x([0-9a-f]+) \[([^\]]+) @ ([0-9]+)\])");
-		//                                --^^^^^^^^^---^^^^^^^^^^^^^^^^^^^^^---^^^^^^^^^^^^^^^^^^^^^---^^^^^---^^^^^^------^^^^^^^^^-----^^^^^^-----^^^^^^^^----
-		//                                  Frame Num   Calling PC              Return Address           Mod     Symbol      Symbol Off    Src Name   Src Line
+		static const std::regex matcher64(R"(([0-9a-f]+) ([0-9a-f]+)`([0-9a-f]+) ([0-9a-f]+)`([0-9a-f]+) ([^!]+)!([^\+]+)\+0x([0-9a-f]+) \[([^\]]+) @ ([0-9]+)\])");
+		//                                  --^^^^^^^^^---^^^^^^^^^^^^^^^^^^^^^---^^^^^^^^^^^^^^^^^^^^^---^^^^^---^^^^^^------^^^^^^^^^-----^^^^^^-----^^^^^^^^--
+		//                                    Frame Num   Calling PC              Return Address          Mod     Symbol      Symbol Off    Src Name   Src Line
 		
+		static const std::regex matcher32(R"(([0-9a-f]+) ([0-9a-f]+) ([0-9a-f]+) ([^!]+)!([^\+]+)\+0x([0-9a-f]+) \[([^\]]+) @ ([0-9]+)\])");
+		//                                  --^^^^^^^^^---^^^^^^^^^---^^^^^^^^^---^^^^^---^^^^^^------^^^^^^^^^-----^^^^^^-----^^^^^^^^--
+		//                                    Frame Num  Calling PC  Return Address  Mod  Symbol      Symbol Off    Src Name   Src Line
+
 		std::smatch matchResult;
-		if (std::regex_match(raw, matchResult, matcher)) {
+		if (std::regex_match(raw, matchResult, matcher64)) {
 			if (matchResult.size() == 11) {
 				frameNumber = std::stoull(matchResult[1].str(), nullptr, 16);
 				childSP = (std::stoull(matchResult[2].str(), nullptr, 16) << 32) + std::stoull(matchResult[3].str(), nullptr, 16);
@@ -43,6 +47,20 @@ public:
 				methodOffset = static_cast<size_t>(std::stoull(matchResult[8].str(), nullptr, 16));
 				srcFileName = matchResult[9].str();
 				srcLineOffset = static_cast<size_t>(std::stoull(matchResult[10].str(), nullptr, 10));
+				return true;
+			}
+		}
+
+		if (std::regex_match(raw, matchResult, matcher32)) {
+			if (matchResult.size() == 9) {
+				frameNumber = std::stoull(matchResult[1].str(), nullptr, 16);
+				childSP = std::stoull(matchResult[2].str(), nullptr, 16);
+				returnAddr = std::stoull(matchResult[3].str(), nullptr, 16);
+				moduleName = matchResult[4].str();
+				methodName = matchResult[5].str();
+				methodOffset = static_cast<size_t>(std::stoull(matchResult[6].str(), nullptr, 16));
+				srcFileName = matchResult[7].str();
+				srcLineOffset = static_cast<size_t>(std::stoull(matchResult[8].str(), nullptr, 10));
 				return true;
 			}
 		}
