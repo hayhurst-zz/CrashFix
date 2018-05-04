@@ -53,3 +53,10 @@
 *.iobj
 *.ipdb
 .vscode/
+*.suo
+*.user
+crashfix_service/service_installer/NSISPlugins/nsis_plugind.dll
+*.ilk
+*.txt
+crashfix_service/test_data/temp_dir1/
+crashfix_service/.vs/
