@@ -26,7 +26,7 @@ PIDFILE = logs\crashfixd.pid
 # Root directory of CrashFix web application files (the 
 # directory where index.php file is located).
 
-WEB_ROOT_DIR = C:\Program Files (x86)\Apache Software Foundation\Apache2.2\htdocs\crashfix
+WEB_ROOT_DIR = C:\wamp\www\crashfix
 
 # Path to log file. The log file is maintained by CrashFix 
 # daemon. The daemon logs its operations and errors to this 
