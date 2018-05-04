@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "StackFrame.h"
 
+#pragma comment(lib, "dbgeng.lib")
+
 STDMETHODIMP StackFrameDumperCallback::QueryInterface(THIS_ _In_ REFIID InterfaceId, _Out_ PVOID* Interface)
 {
 	*Interface = nullptr;
