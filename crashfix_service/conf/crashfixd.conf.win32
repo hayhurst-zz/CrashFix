@@ -129,3 +129,6 @@ RESTART_DAEMON_ON_CRASH = 1
 
 MONITOR_LOG_PATH = logs\monitor.log
 
+# Path to php.example
+
+PHP_PATH = C:\wamp\bin\php\php7.2.4\php.exe

@@ -367,7 +367,10 @@ void CDaemon::ReadConfig()
 		m_sWebRootDir += '/';
 
 	// Format polling command
-	m_sPollCommand = "php \"";
+	if(m_sPhpPath.empty())
+		m_sPollCommand = "php \"";
+	else
+		m_sPollCommand = m_sPhpPath + " \"";
 	m_sPollCommand += m_sWebRootDir;
 	m_sPollCommand += "protected/yiic.php\" poll";
 
@@ -424,6 +427,8 @@ void CDaemon::ReadConfig()
 	m_bNotifyWebmasterOnErrors = 1== config.getProfileInt("NOTIFY_WEBMASTER_ON_ERRORS", 0);
 
 	m_bRestartDaemonOnCrash = 1== config.getProfileInt("RESTART_DAEMON_ON_CRASH", 0);
+
+	m_sPhpPath = config.getProfileString("PHP_PATH", szBuff, 2048);
 }
 
 void CDaemon::InitErrorLog()
@@ -479,6 +484,7 @@ void CDaemon::InitErrorLog()
 	{
 		m_Log.write(0, "Path to log file is '%s'\n", m_sErrorLogFile.c_str());
 		m_Log.write(0, "Path to pidfile is '%s'\n", m_sPIDFile.c_str());
+		m_Log.write(0, "PHP path is '%s'\n", m_sPhpPath.c_str());
 		m_Log.write(0, "Count of worker threads is %d\n", m_nThreadCount);
 		//m_Log.write(0, "Server port number is %d\n", m_nServerPort);
 		//m_Log.write(0, "Maximum request queue size is %d\n", m_nMaxQueueSize);
