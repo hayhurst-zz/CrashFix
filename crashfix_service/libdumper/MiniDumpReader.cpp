@@ -440,9 +440,9 @@ BOOL CMiniDumpReader::ReadModuleListStream(ULONG uRva, ULONG uSize)
         size_t pos = m.m_sModuleName.rfind(L'\\');
         if(pos!=m.m_sModuleName.npos)
             sShortModuleName = sShortModuleName.substr(pos+1, std::string::npos);
-		pos = sShortModuleName.rfind(L'.');
-		if (pos != sShortModuleName.npos)
-			sShortModuleName = sShortModuleName.substr(0, pos);
+		//pos = sShortModuleName.rfind(L'.');
+		//if (pos != sShortModuleName.npos)
+		//	sShortModuleName = sShortModuleName.substr(0, pos);
         m.m_sShortModuleName = sShortModuleName;
 
         m_aModules.push_back(m);
