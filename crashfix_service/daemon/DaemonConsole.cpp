@@ -245,7 +245,8 @@ int CDaemonConsole::Run(int argc, char* argv[])
 
 #ifdef _WIN32
 		m_pDaemon = &daemon;
-		daemon.EnterServiceMain();
+		if (daemon.EnterServiceMain())
+			m_sErrorMsg.clear();
 #endif
 
         goto exit;

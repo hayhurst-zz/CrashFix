@@ -140,7 +140,7 @@ public:
 
 #ifdef _WIN32
 	//! Registers service main procedure and runs it
-	void EnterServiceMain();
+	bool EnterServiceMain();
 #endif
 
 protected:

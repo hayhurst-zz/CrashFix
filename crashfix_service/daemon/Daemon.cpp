@@ -173,7 +173,7 @@ start:
 
 	// Exit.
 	m_Log.write(0, "Daemon is exiting.\n");
-	exit(EXIT_SUCCESS);
+	//exit(EXIT_SUCCESS);
 }
 
 int CDaemon::ReadPidFile()
@@ -747,7 +747,7 @@ void CDaemon::RegisterCHLDHandler(bool bRegister)
 
 void CDaemon::Die(const char* szMessage, bool bUsePStr)
 {
-	// This method is called on a unfovaurable outcome.
+	// This method is called on a unfavorable outcome.
 	// In this method, we output an error message to screen and to log file and
 	// terminate the process with error code.
 
@@ -1676,7 +1676,7 @@ int CDaemon::StartNTService(BOOL bStart)
 	return 0;
 }
 
-void CDaemon::EnterServiceMain()
+bool CDaemon::EnterServiceMain()
 {
 	SERVICE_TABLE_ENTRY serviceTable[] =
     {
@@ -1688,7 +1688,7 @@ void CDaemon::EnterServiceMain()
     // manager, which causes the thread to be the service control dispatcher
     // thread for the calling process. This call returns when the service has
     // stopped. The process should simply terminate when the call returns.
-    StartServiceCtrlDispatcher(serviceTable);
+    return StartServiceCtrlDispatcher(serviceTable);
 }
 
 void WINAPI CDaemon::ServiceMain(DWORD dwArgc, PWSTR *pszArgv)
