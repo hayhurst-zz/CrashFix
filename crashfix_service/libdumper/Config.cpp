@@ -62,7 +62,7 @@ const char* CConfig::GetFileName()
 
 char* CConfig::getProfileString(const char* param_name, char* buf, int buf_len)
 {
-	char* szRet = NULL;
+	char* szRet = "";
 	char szLine[4096]="";
 	char* s = NULL;
 	char* c = NULL;
@@ -194,7 +194,8 @@ int CConfig::getProfileInt(const char* param_name, int default_val)
 	//const char* profile_name = m_sFileName.c_str();
 
 	char* s = getProfileString(param_name, buf, BUF_SIZE);
-	if(s==NULL) return default_val;
+	if(s==NULL || strlen(s) == 0) 
+		return default_val;
 
 	return atoi(s);
 }
