@@ -75,7 +75,7 @@
     Var UninstLog
  
   ;Uninstall log file missing.
-    LangString UninstLogMissing ${LANG_ENGLISH} "${UninstLog} not found!$\r$\nUninstallation cannot proceed!"
+    #LangString UninstLogMissing ${LANG_ENGLISH} "${UninstLog} not found!$\r$\nUninstallation cannot proceed!"
  
   ;AddItem macro
     !define AddItem "!insertmacro AddItem"

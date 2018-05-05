@@ -20,6 +20,9 @@ Unicode false
 !include "MUI.nsh"
 !include "WordFunc.nsh"
 
+var WebAppInstallDir
+var LicenseFilePath
+
 !addplugindir /x86-ansi NSISPlugins ; Directory for custom NSIS plugins
 
 SetCompressor lzma
@@ -324,12 +327,25 @@ Section "CrashFix Service"
   ${SetOutPath} $INSTDIR\conf  
   File /oname=crashfixd.conf "..\conf\crashfixd.conf.win32"   
   
+  nsis_plugin::detect_httpd 
+  Pop $0  
+  DetailPrint "Apache Folder Detected: $0"
+
+  Push "Select Root directory of CrashFix webapp"     # Title
+  Push $0     # Initial Folder
+  Push "0"
+  nsis_plugin::open_folder_dialog
+  Pop $0
+  StrCpy $WebAppInstallDir $0
+  DetailPrint "Set WEB_ROOT_DIR to: $0" 
+  
   nsis_plugin::write_config_string "$INSTDIR\conf\crashfixd.conf" "WEB_ROOT_DIR" "$WebAppInstallDir"
   nsis_plugin::write_config_string "$INSTDIR\conf\crashfixd.conf" "WEBMASTER_EMAIL" "$AdminEmailAddress"
   nsis_plugin::write_config_string "$INSTDIR\conf\crashfixd.conf" "SMTP_SERVER" "$SMTPServer"
   nsis_plugin::write_config_string "$INSTDIR\conf\crashfixd.conf" "SMTP_LOGIN" "$SMTPUser"
   nsis_plugin::write_config_string "$INSTDIR\conf\crashfixd.conf" "SMTP_PASSWORD" "$SMTPPassword"  
   
+  StrCpy $LicenseFilePath ""
   ${If} $LicenseFilePath != ""
 	CopyFiles /SILENT /FILESONLY $LicenseFilePath $INSTDIR\licenses\crashfix.lic
   ${Endif}

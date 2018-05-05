@@ -30,6 +30,13 @@ extern "C" void __declspec(dllexport) detect_httpd(
 			bDetected = true;
 		}
 	}
+	else if (ERROR_SUCCESS == regKey.Open(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\services\\wampapache")))
+	{
+		if (ERROR_SUCCESS == regKey.QueryStringValue(_T("ImagePath"), str, &len))
+		{
+			bDetected = true;
+		}
+	}
 
 	CStringA sPath = str;
 	int nPos = sPath.Find("\\bin\\httpd.exe");
@@ -51,17 +58,24 @@ extern "C" void __declspec(dllexport) open_folder_dialog(
   stack_t **stacktop)
 {
 	EXDLL_INIT();
-		
+	
 	char szBuffer[1024]="";
 	popstring(szBuffer);
 	HWND hWndParent = (HWND)atoi(szBuffer);
 
-	CFolderDialog dlg(hWndParent, _T("Select Directory"));
+	popstring(szBuffer);
+	CString sInitialFolder = CA2T(szBuffer);
+
+	popstring(szBuffer);
+	CString sTitle = CA2T(szBuffer);
+
+	CFolderDialog dlg(hWndParent, sTitle);
+	dlg.SetInitialFolder(sInitialFolder, TRUE);
 	INT_PTR nResult = dlg.DoModal(hWndParent);
 	if(nResult==IDOK)
 	{
-		CStringA sFolderName = dlg.m_szFolderPath;		
-		pushstring(sFolderName.GetBuffer());
+		CString sFolderName = dlg.m_szFolderPath;		
+		pushstring(CT2A(sFolderName));
 	}
 	else
 	{
