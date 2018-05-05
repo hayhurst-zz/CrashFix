@@ -10,12 +10,17 @@
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}.exe"
 !define PRODUCT_GLOBAL_REGKEY ""
 
+; Do NOT auto close detail list dialog when file copy finished
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+
+Unicode false
+
 !define UninstLog "uninstall.log"
 !include "UninstallLog.nsh"
 !include "MUI.nsh"
 !include "WordFunc.nsh"
 
-!addplugindir NSISPlugins ; Directory for custom NSIS plugins
+!addplugindir /x86-ansi NSISPlugins ; Directory for custom NSIS plugins
 
 SetCompressor lzma
 CRCCheck on
@@ -25,7 +30,7 @@ OutFile "crashfix-service-${PRODUCT_VERSION}-Win32.exe"
 
 !system "echo crashfix-service-${PRODUCT_VERSION}-Win32.exe > InstallerName.txt"
 
-ReserveFile "${NSISDIR}\Plugins\InstallOptions.dll"
+ReserveFile "${NSISDIR}\Plugins\x86-ansi\InstallOptions.dll"
 
 InstallDir "$PROGRAMFILES\${PRODUCT_NAME}"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
@@ -131,7 +136,7 @@ FunctionEnd
 !insertmacro IsUserAdmin ""
 !insertmacro IsUserAdmin "un."
 
-!define LVM_GETITEMCOUNT 0x1004
+#!define LVM_GETITEMCOUNT 0x1004
 !define LVM_GETITEMTEXT 0x102D
  
 Function DumpLog
