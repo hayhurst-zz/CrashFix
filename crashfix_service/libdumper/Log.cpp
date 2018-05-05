@@ -144,7 +144,7 @@ void CLog::print_timestamp()
 	// get current time
 	time_t cur_time = 0;
 	time(&cur_time);
-	char szDateTime[64] = "";
+	TCHAR szDateTime[64] = _T("");
 
 	struct tm* ltimeinfo = localtime(&cur_time );
 #ifndef _WIN32
@@ -157,10 +157,10 @@ void CLog::print_timestamp()
 	int diff_hours = -tzi.Bias/60;
 	int diff_mins = abs(tzi.Bias%60);
 
-	strftime(szDateTime, 63,  "%a, %d %b %Y %H:%M:%S", ltimeinfo);
+	_tcsftime(szDateTime, 63, _T("%a, %d %b %Y %H:%M:%S"), ltimeinfo);
 
 	// write timestamp
-	fprintf(m_LogFile, "[%s %c%02d%02d] ", szDateTime, diff_hours>=0?'+':'-', diff_hours, diff_mins);
+	fprintf(m_LogFile, "[%s %c%02d%02d] ", strconv::w2utf8(szDateTime).c_str(), diff_hours>=0?'+':'-', diff_hours, diff_mins);
 #endif
 }
 
@@ -191,7 +191,8 @@ void CLog::writeW(int level, const wchar_t* fmt, ...)
 
 void CLog::write(int level, const char* fmt, ...)
 {
-	if(m_path.empty()) return;
+	if(m_path.empty()) 
+		return;
 	if(level<=m_level && m_LogFile!=NULL)
 	{
 	    print_timestamp();
