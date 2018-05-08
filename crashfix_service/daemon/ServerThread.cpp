@@ -396,6 +396,7 @@ int CServerThread::ProcessCommand(const char* szCmdLine, std::string& sErrorMsg)
         CCommandProcessor cp;
         cp.SubstituteLog(m_pLog, false);
 		cp.SubstitutePdbCache(&m_pServer->m_PdbCache, false);
+		cp.SetDumpExceptionThreadOnly(m_pServer->m_pDaemon->IsDumpExceptionThreadOnly());
         nErrorCode = cp.Run(argc, argv);
         sErrorMsg = cp.GetErrorMsg();
     }

@@ -83,6 +83,9 @@ public:
     //! Replaces
     CPdbCache* SubstitutePdbCache(CPdbCache* pPdbCache, bool bOwn = true);
 
+	//! Set option
+	void SetDumpExceptionThreadOnly(bool value);
+
 private:
 
     std::string m_sErrorMsg; //!< Last error message
@@ -90,4 +93,5 @@ private:
     bool m_bLogIsOwned;      //!< Log is owned and should be deleted when we exit
     CPdbCache* m_pPdbCache;  //!< PDB cache.
     bool m_bPdbCacheIsOwned; //!< PDB cache is owned and should be deleted when we exit
+	bool m_bDumpExceptionThreadOnly;   //!< dump stack trace of the exception thread only
 };

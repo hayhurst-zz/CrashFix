@@ -407,7 +407,7 @@ void CDaemon::ReadConfig()
 
 	m_sWebmasterEmail = config.getProfileString("WEBMASTER_EMAIL", szBuff, 2048);
 
-	m_bLaunchMonitorProcess = 1== config.getProfileInt("LAUNCH_MONITORING_PROCESS", 0);
+	m_bLaunchMonitorProcess = !!config.getProfileInt("LAUNCH_MONITORING_PROCESS", 0);
 
 	m_sSmtpServerHost = config.getProfileString("SMTP_SERVER", szBuff, 2048);
 
@@ -424,11 +424,13 @@ void CDaemon::ReadConfig()
 
 	m_sSmtpPassword = config.getProfileString("SMTP_PASSWORD", szBuff, 2048);
 
-	m_bNotifyWebmasterOnErrors = 1== config.getProfileInt("NOTIFY_WEBMASTER_ON_ERRORS", 0);
+	m_bNotifyWebmasterOnErrors = !!config.getProfileInt("NOTIFY_WEBMASTER_ON_ERRORS", 0);
 
-	m_bRestartDaemonOnCrash = 1== config.getProfileInt("RESTART_DAEMON_ON_CRASH", 0);
+	m_bRestartDaemonOnCrash = !!config.getProfileInt("RESTART_DAEMON_ON_CRASH", 0);
 
 	m_sPhpPath = config.getProfileString("PHP_PATH", szBuff, 2048);
+
+	m_bDumpExceptionThreadOnly = !!config.getProfileInt("DUMP_EXCEPTION_THREAD_ONLY", 0);
 }
 
 void CDaemon::InitErrorLog()
@@ -499,7 +501,7 @@ void CDaemon::InitSocketServer()
 	bool bInit = m_SocketServer.Init(this, m_nServerPort, m_nMaxQueueSize, m_nThreadCount, m_nCacheMaxMemUsageMB, &m_Log);
 	if(!bInit)
 	{
-		// Coldn't init the socket server by some reason.
+		// Couldn't init the socket server by some reason.
 		std::string sErrorMsg = "Couldn't init socket server: ";
 		sErrorMsg += m_SocketServer.GetErrorMsg();
 		Die(sErrorMsg.c_str(), true);
@@ -1419,6 +1421,11 @@ bool CDaemon::GetError(int nIndex, std::string& sError)
 
 	sError = it->first;
     return true;
+}
+
+bool CDaemon::IsDumpExceptionThreadOnly()
+{
+	return m_bDumpExceptionThreadOnly;
 }
 
 #ifdef _WIN32

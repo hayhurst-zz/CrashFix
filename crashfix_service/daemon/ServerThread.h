@@ -87,7 +87,7 @@ private:
     bool m_bBusy;              //!< Busy flag.
     time_t m_StartTime;        //!< Start time of the last request processing.
     SOCK m_Sock;               //!< Socket.
-	std::string m_sCmdId;              //!< Assync command ID.
+	std::string m_sCmdId;      //!< Assync command ID.
 	std::string m_sCommand;    //!< Assync command.
 };
 

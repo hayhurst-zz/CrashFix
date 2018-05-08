@@ -21,6 +21,7 @@ CCommandProcessor::CCommandProcessor()
 
     m_pPdbCache = NULL;
     m_bPdbCacheIsOwned = true;
+	m_bDumpExceptionThreadOnly = false;
 }
 
 CCommandProcessor::~CCommandProcessor()
@@ -276,6 +277,11 @@ CPdbCache* CCommandProcessor::SubstitutePdbCache(CPdbCache* pPdbCache, bool bOwn
     m_bPdbCacheIsOwned = bOwn;
 
     return pOldCache;
+}
+
+void CCommandProcessor::SetDumpExceptionThreadOnly(bool value)
+{
+	m_bDumpExceptionThreadOnly = value;
 }
 
 void CCommandProcessor::PrintUsage()
@@ -1176,8 +1182,11 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 		for(i=0; i<pMiniDump->GetThreadCount(); i++)
 		{
 			MiniDumpThreadInfo* pThread = pMiniDump->GetThreadInfo(i);
-			if(!pThread) break;
-			if (pThread->m_uThreadId != pExcInfo->m_uThreadId) continue;
+			if(!pThread) 
+				break;
+
+			if(m_bDumpExceptionThreadOnly && pThread->m_uThreadId != pExcInfo->m_uThreadId) 
+				continue;
 
 			doc.BeginSection("StackTrace");
 			doc.PutRecord("ThreadID", "%d", pThread->m_uThreadId);
