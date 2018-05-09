@@ -58,15 +58,16 @@ bool CPdbCache::AddPdbSearchDir(
 		bool bSearchRecursively)
 {
 	// Add a directory to PDB search list.
+	std::wstring local_path = GetLocalPath(sPathToSearchDir);
 
 	// Check if directory really exists.
 #ifdef _WIN32
-	DWORD dwAttrs = GetFileAttributesW(sPathToSearchDir.c_str());
+	DWORD dwAttrs = GetFileAttributesW(local_path.c_str());
 	if(dwAttrs==INVALID_FILE_ATTRIBUTES || (dwAttrs&FILE_ATTRIBUTE_DIRECTORY)==0)
 		return false; // Directory does not exist.
 #else
     struct stat st_buf;
-    int status = stat (strconv::w2a(sPathToSearchDir).c_str(), &st_buf);
+    int status = stat (strconv::w2a(local_path).c_str(), &st_buf);
     if (status != 0)
         return false;
 
@@ -78,7 +79,7 @@ bool CPdbCache::AddPdbSearchDir(
 
 	// Add directory to our list
     _SearchDirInfo sdi;
-    sdi.m_sPath = sPathToSearchDir;
+    sdi.m_sPath = local_path;
 #ifdef _WIN32
 	std::replace(sdi.m_sPath.begin(), sdi.m_sPath.end(), '/', '\\');
 #else
@@ -1277,4 +1278,30 @@ bool CPdbCache::DeletePdbFile(std::wstring sPath)
 	RmDir(sSubDirName, true);
 
 	return true;
+}
+
+std::wstring CPdbCache::GetLocalPath(const std::wstring symbol_path)
+{
+	// symbol_path: Microsoft Symbol Server with local cache
+	// e.g. "srv*C:\SymbolCache*http://msdl.microsoft.com/download/symbols"
+
+	std::wstring local_path;
+	do
+	{
+		const std::wstring prefix = L"srv*";
+		if (symbol_path.substr(0, prefix.size()) != prefix)
+			break;
+
+		auto pos = symbol_path.find(L"*", prefix.size());
+		if (pos == std::wstring::npos)
+			break;
+
+		local_path = symbol_path.substr(prefix.size(), pos - prefix.size());
+
+	} while (false);
+
+	if(!local_path.empty())
+		return local_path;
+	else
+		return symbol_path;
 }

@@ -193,6 +193,9 @@ private:
 	//! @param[in] sPath Path to PDB file stored in cache.
 	bool DeletePdbFile(std::wstring sPath);
 
+	//! Get local path from symbol path string
+	std::wstring GetLocalPath(const std::wstring symbol_path);
+
     //! Search dir info.
     struct _SearchDirInfo
     {

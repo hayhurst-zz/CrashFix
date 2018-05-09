@@ -115,8 +115,22 @@ bool CSocketServer::Init(CDaemon* pDaemon, int nPort, int nMaxQueueSize, int nTo
         CLOSESOCK(m_ServerSock);
         return false;
 	}
+	else
+	{
+		m_pLog->write(0, "Add PdbSearchDir Succeed: %s\n", (LPCSTR)CW2A(sPdbSearchDir.c_str()));
+	}
 
-	// Set max mem usage (convert to KB).
+	std::string additional_symbol_server = m_pDaemon->GetAdditionalSymbolServer();
+	if (!additional_symbol_server.empty())
+	{
+		bAdd = m_PdbCache.AddPdbSearchDir((LPWSTR)CA2W(additional_symbol_server.c_str()), PDB_SYMBOL_STORE, true);
+		if(bAdd)
+			m_pLog->write(0, "Add PdbSearchDir Succeed: %s\n", additional_symbol_server.c_str());
+		else
+			m_pLog->write(0, "Add PdbSearchDir Failed: %s\n", additional_symbol_server.c_str());
+	}
+
+	// Set max memory usage (convert to KB).
 	m_PdbCache.SetMaxMemUsage(m_nMaxMemUsageMB*1024);
 
     // Done

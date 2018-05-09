@@ -141,6 +141,9 @@ public:
 	//! Return stack dump option
 	bool IsDumpExceptionThreadOnly();
 
+	//! Return additional symbol server
+	std::string GetAdditionalSymbolServer();
+
 #ifdef _WIN32
 	//! Registers service main procedure and runs it
 	bool EnterServiceMain();
@@ -283,7 +286,8 @@ protected:
     bool m_bRestartDaemonOnCrash;      //!< Should we restart daemon on errors?
     int m_nPidToMonitor;               //!< ID of the process to monitor.
 	std::string m_sPhpPath;	           //!< PHP folder (optional).
-	bool m_bDumpExceptionThreadOnly;   //!< dump stack trace of the exception thread only
+	bool m_bDumpExceptionThreadOnly;   //!< Dump stack trace of the exception thread only.
+	std::string m_sMsSymbolServer;	   //!< Microsoft Symbol Server with local cache (optional).
 	
 	//bool m_bCriticalError;             //!< Were there any critical errors?
 	CCritSec m_csLock;

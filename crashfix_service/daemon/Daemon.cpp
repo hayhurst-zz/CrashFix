@@ -129,7 +129,12 @@ start:
 	    LaunchMonitorProcess();
 	}
 
-    if(m_MonitorOption!=MO_IS_MONITOR)
+	// Init logging.
+	// In Linux, this will redirect the standard file descriptors to log file.
+	// Since now, we will use the log file for output.
+	InitErrorLog();
+	
+	if (m_MonitorOption != MO_IS_MONITOR)
 	{
 		// Init socket server.
 		InitSocketServer();
@@ -138,11 +143,6 @@ start:
         // If we are not a monitor process, output the success message.
 		//fprintf(stderr, "CrashFix daemon has started successfully.\n");
 	}
-
-    // Init logging.
-    // In Linux, this will redirect the standard file descriptors to log file.
-	// Since now, we will use the log file for output.
-	InitErrorLog();
 
 	/*CR_EXCEPTION_INFO ei;
     memset(&ei, 0, sizeof(CR_EXCEPTION_INFO));
@@ -431,6 +431,8 @@ void CDaemon::ReadConfig()
 	m_sPhpPath = config.getProfileString("PHP_PATH", szBuff, 2048);
 
 	m_bDumpExceptionThreadOnly = !!config.getProfileInt("DUMP_EXCEPTION_THREAD_ONLY", 0);
+
+	m_sMsSymbolServer = config.getProfileString("MS_SYMBOL_SERVER", szBuff, 2048);
 }
 
 void CDaemon::InitErrorLog()
@@ -1426,6 +1428,11 @@ bool CDaemon::GetError(int nIndex, std::string& sError)
 bool CDaemon::IsDumpExceptionThreadOnly()
 {
 	return m_bDumpExceptionThreadOnly;
+}
+
+std::string CDaemon::GetAdditionalSymbolServer()
+{
+	return m_sMsSymbolServer;
 }
 
 #ifdef _WIN32
