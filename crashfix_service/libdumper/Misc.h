@@ -1,6 +1,10 @@
 #pragma once
 #include "stdafx.h"
 
+#include <string>
+#include <map>
+#include <vector>
+
 //! The following macros are used for parsing the command line
 #define args_left() (argc-cur_arg)
 #define arg_exists() (cur_arg<argc && argv[cur_arg]!=NULL)
@@ -22,8 +26,14 @@ double microtime();
 void SplitFileName(std::wstring sPath, std::wstring& sDirectory, std::wstring& sFileName,
                    std::wstring& sBaseFileName, std::wstring& sExtension);
 
+//! Is a directory existing
+bool IsDirExisting(std::wstring sPath);
+
 //! Creates a directory
 int CreateDir(std::wstring sPath);
+
+//! Creates a directory recursively
+bool CreateDirRecursively(std::wstring sPath);
 
 //! Removes a directory
 int RmDir(std::wstring sPath, bool bFailIfNonEmpty);
@@ -59,10 +69,13 @@ size_t GetMemoryUsage();
 //! Replaces slashes with backslashes (for Windows) and vise versa (for Linux).
 void FixSlashesInFilePath(std::wstring& sPath);
 
+//! split string by separator
+void split_string(const std::wstring& s, const std::wstring& split, std::vector<std::wstring>& result);
+
 #ifdef _WIN32
 
 //! Spawns another process and, optionally, blocks until it extis
-int execute(const char* szCmdLine, bool bWait = true, int* pnPid = NULL);
+int execute(const char* szCmdLine, bool bWait = true, DWORD* pnPid = NULL);
 
 //! Tokenise string (reenterable)
 char *strtok_r(char *str, const char *delim, char **nextp);
@@ -75,6 +88,19 @@ std::wstring GetModuleName(HMODULE hModule);
 
 //! Returns parent directory name
 std::wstring GetParentDir(std::wstring sPath);
+
+//! Return normalized path
+std::wstring GetNormalizedPath(std::wstring sPath);
+
+//! Return folder of file path
+std::wstring GetFileFolder(std::wstring sPath);
+
+//! Return file name of file path
+std::wstring GetFileName(std::wstring sPath);
+
+//! modify log directory to app_data in windows if necessary
+void use_app_data_auto(std::wstring& sPath);
+void use_app_data_auto(std::string& sPath);
 
 //! Converts file size number to string
 CString FileSizeToStr(ULONG64 uFileSize);

@@ -3,6 +3,11 @@
 #include "strconv.h"
 #include "md5.h"
 
+#ifdef _WIN32
+#include <shlobj.h>
+#pragma comment(lib, "Psapi.lib")
+#endif
+
 double microtime()
 {
 #ifdef _WIN32
@@ -91,6 +96,24 @@ void SplitFileName(std::wstring sPath, std::wstring& sDirectory,
     }
 }
 
+bool IsDirExisting(std::wstring sPath)
+{
+#ifdef _WIN32
+	DWORD dwAttrs = GetFileAttributesW(sPath.c_str());
+	if (dwAttrs == INVALID_FILE_ATTRIBUTES || (dwAttrs&FILE_ATTRIBUTE_DIRECTORY) == 0)
+		return false; // Directory does not exist.
+#else
+	struct stat st_buf;
+	int status = stat(strconv::w2a(local_path).c_str(), &st_buf);
+	if (status != 0)
+		return false;
+
+	if (!S_ISDIR(st_buf.st_mode))
+		return false;
+#endif
+	return true;
+}
+
 int CreateDir(std::wstring sPath)
 {
 #ifdef _WIN32
@@ -101,6 +124,21 @@ int CreateDir(std::wstring sPath)
         return 0; // OK
 	return 1; // Error
 #endif
+}
+
+bool CreateDirRecursively(std::wstring sPath)
+{
+	if(IsDirExisting(sPath))
+		return true;
+
+	std::wstring parent = GetParentDir(sPath);
+	if (parent == sPath)
+		return false;
+
+	if (!IsDirExisting(parent))
+		CreateDirRecursively(parent);
+
+	return CreateDir(sPath) == 0;
 }
 
 int RmDir(std::wstring sPath, bool bFailIfNonEmpty)
@@ -320,9 +358,25 @@ void FixSlashesInFilePath(std::wstring& sPath)
 
 }
 
+void split_string(const std::wstring& s, const std::wstring& split, std::vector<std::wstring>& result)
+{
+	result.clear();
+	size_t pos_begin = 0;
+	for (;; )
+	{
+		size_t pos = s.find_first_of(split, pos_begin);
+		if (pos == s.npos)
+			break;
+		if (pos - pos_begin > 0)
+			result.push_back(s.substr(pos_begin, pos - pos_begin));
+		pos_begin = pos + 1;
+	}
+	result.push_back(s.substr(pos_begin));
+}
+
 #ifdef _WIN32
 
-int execute(const char* szCmdLine, bool bWait, int* pnPid)
+int execute(const char* szCmdLine, bool bWait, DWORD* pnPid)
 {
 	if(pnPid)
 		*pnPid = 0;
@@ -389,6 +443,89 @@ std::wstring GetParentDir(std::wstring sPath)
 	if(pos!=sPath.npos)
 		sPath = sPath.substr(0, pos);
 	return sPath;
+}
+
+std::wstring GetNormalizedPath(std::wstring sPath)
+{
+#ifdef _WIN32
+	TCHAR buffer[MAX_PATH] = { 0 };
+	LPTSTR lpPart = nullptr;
+	DWORD retval = GetFullPathName(sPath.c_str(), MAX_PATH, buffer, &lpPart);
+	if (retval == 0)
+		return sPath;	// ERROR
+
+	return buffer;
+#else
+	return sPath
+#endif
+}
+
+std::wstring GetFileFolder(std::wstring sPath)
+{
+	std::wstring file_folder = sPath;
+	size_t pos = sPath.rfind(L'\\');
+	if (pos != sPath.npos)
+	{
+		file_folder = sPath.substr(0, pos);
+	}
+	return file_folder;
+}
+
+std::wstring GetFileName(std::wstring sPath)
+{
+	std::wstring file_name = sPath;
+	size_t pos = sPath.rfind(L'\\');
+	if (pos != sPath.npos)
+	{
+		file_name = sPath.substr(pos + 1, std::string::npos);
+	}
+	return file_name;
+}
+
+void use_app_data_auto(std::wstring& sPath)
+{
+#ifdef _WIN32
+
+	do
+	{
+		if (sPath == L"stdout")
+			break;
+
+		sPath = GetNormalizedPath(sPath);
+
+		std::wstring file_name = GetFileName(sPath);
+		std::wstring file_folder = GetFileFolder(sPath);
+
+		std::wstring programs_folder;
+		TCHAR szBuf[MAX_PATH] = { 0 };
+		if (::SHGetSpecialFolderPath(NULL, szBuf, CSIDL_PROGRAM_FILES, TRUE))
+			programs_folder = szBuf;
+		if (programs_folder.empty())
+			break;
+
+		if (file_folder.find(programs_folder) == std::wstring::npos)
+			break;
+
+		// change to app_data shared by SYSTEM account and user account (C:\ProgramData)
+		std::wstring app_data_folder;
+		if (::SHGetSpecialFolderPath(NULL, szBuf, CSIDL_COMMON_APPDATA, TRUE))
+			app_data_folder = szBuf;
+		if (app_data_folder.empty())
+			break;
+
+		file_folder = app_data_folder + _T("\\CrashFix\\logs\\");
+		sPath = file_folder + file_name;
+
+	} while (false);
+
+#endif
+}
+
+void use_app_data_auto(std::string& sPath)
+{
+	std::wstring path = strconv::a2w(sPath);
+	use_app_data_auto(path);
+	sPath = strconv::w2a(path);
 }
 
 CString FileSizeToStr(ULONG64 uFileSize)

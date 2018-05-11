@@ -8,12 +8,17 @@
 #include "DumpStruct.h"
 #include "PeStruct.h"
 
-#ifdef _WIN32
-#include "strconv.h"
-#include "StackFrame.h"
-#include <mutex>
-static StackFrameDumper g_winFrameDumper;
-static std::mutex g_winFrameDumperMutex;
+#if WIN32_DBG_API == USE_DBGENG
+	#include "strconv.h"
+	#include "StackFrame.h"
+	#include <mutex>
+	static StackFrameDumper g_winFrameDumper;
+	static std::mutex g_winFrameDumperMutex;
+#elif WIN32_DBG_API == USE_DBGHLP
+	#include "StackDumper.h"
+	#include <mutex>
+	static StackDumper::CMiniDumpReader g_winFrameDumper;
+	static std::mutex g_winFrameDumperMutex;
 #endif
 
 CStackWalker::CStackWalker()
@@ -37,6 +42,9 @@ bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD 
 	BOOL bGetContext = FALSE;
 	DWORD dwMachineType = 0;
 	MiniDumpSystemInfo* pSysInfo = NULL;
+#if WIN32_DBG_API == USE_DBGHLP
+	m_dwThreadId = dwThreadId;
+#endif
 
     // Validate input params
     if(pMiniDump==NULL ||
@@ -108,7 +116,7 @@ bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD 
     }
 
 	// initialize debug helper, if under win32
-#ifdef _WIN32
+#if WIN32_DBG_API == USE_DBGENG
 	static bool g_winFrameDumper_initilaized = false;
 	{
 		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
@@ -127,7 +135,20 @@ bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD 
 			}
 		}
 	}
-
+#elif WIN32_DBG_API == USE_DBGHLP
+	static bool g_winFrameDumper_initilaized = false;
+	{
+		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
+		if (!g_winFrameDumper_initilaized) 
+		{
+			g_winFrameDumper_initilaized = true;
+			if (pPdbCache) 
+			{
+				auto pdbs = pPdbCache->GetSearchDirs();
+				g_winFrameDumper.SetDirecoties(pdbs.c_str());
+			}
+		}
+	}
 #endif
     // Done
 	m_sErrorMsg = L"Success";
@@ -159,12 +180,45 @@ CStackFrame* CStackWalker::GetStackFrame()
 
 BOOL CStackWalker::FirstStackFrame()
 {
-#ifdef _WIN32
+#if WIN32_DBG_API == USE_DBGENG
 	{
 		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
 		m_winStackFrames = g_winFrameDumper.dumpFrame(
 			m_pMdmpReader->GetFileName().c_str(), m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC
 		);
+	}
+#elif WIN32_DBG_API == USE_DBGHLP
+	{
+		m_winStackFrames.clear();
+
+		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
+		if (g_winFrameDumper.Open(m_pMdmpReader->GetFileName().c_str()) != 0)
+			return FALSE;
+		if (g_winFrameDumper.StackWalk(m_dwThreadId, m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC) != 0)
+			return FALSE;
+		int nThreadIndex = g_winFrameDumper.GetThreadRowIdByThreadId(m_dwThreadId);
+		if(nThreadIndex < 0 || nThreadIndex >= g_winFrameDumper.m_DumpData.m_Threads.size())
+			return FALSE;
+		for (const auto& frame : g_winFrameDumper.m_DumpData.m_Threads[nThreadIndex].m_StackTrace)
+		{
+			CStackFrame StackFrame;
+			StackFrame.m_dwAddrPC = frame.m_dwAddrPCOffset;
+			StackFrame.m_sSymbolName = CW2A(frame.m_sSymbolName);
+			CPdbSymbol::UndecorateSymbolName(StackFrame.m_sSymbolName, StackFrame.m_sUndecoratedSymbolName, true);
+			StackFrame.m_dwOffsInSymbol = frame.m_dw64OffsInSymbol;
+			StackFrame.m_sSrcFileName = frame.m_sSrcFileName;
+			StackFrame.m_nSrcLineNumber = frame.m_nSrcLineNumber;
+			StackFrame.m_dwOffsInLine = frame.m_dwOffsInLine;
+
+			if (frame.m_nModuleRowID >= 0 && frame.m_nModuleRowID < g_winFrameDumper.m_DumpData.m_Modules.size())
+			{
+				const auto& module = g_winFrameDumper.m_DumpData.m_Modules[frame.m_nModuleRowID];
+				StackFrame.m_sModuleName = module.m_sModuleName;;
+				StackFrame.m_dwOffsInModule = StackFrame.m_dwAddrPC - module.m_uBaseAddr;
+			}
+			m_winStackFrames.push_back(StackFrame);
+		}
+		g_winFrameDumper.Close();
 	}
 #endif
     return NextStackFrame(TRUE);
@@ -172,7 +226,7 @@ BOOL CStackWalker::FirstStackFrame()
 
 BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
 {
-#ifdef _WIN32
+#if WIN32_DBG_API == USE_DBGENG
 	if (bFirstFrame) m_winStackIdx = 0;
 	if (m_winStackIdx >= m_winStackFrames.size()) return false;
 	//m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
@@ -190,6 +244,14 @@ BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
 	m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
 	m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].srcFileName); // TODO:
 	m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset;
+	m_winStackIdx++;
+	return true;
+#elif WIN32_DBG_API == USE_DBGHLP
+	if (bFirstFrame) 
+		m_winStackIdx = 0;
+	if (m_winStackIdx >= m_winStackFrames.size()) 
+		return false;
+	m_StackFrame = m_winStackFrames[m_winStackIdx];
 	m_winStackIdx++;
 	return true;
 #endif
@@ -369,7 +431,7 @@ BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
     // Set stack frame fields
 
     
-    m_StackFrame.m_pFuncTableEntry = FALSE;
+    m_StackFrame.m_pFuncTableEntry = NULL;
     m_StackFrame.m_bFar = FALSE;
     m_StackFrame.m_bVirtual = FALSE;
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
 
-#define RVA ULONG32
+#define RVA DWORD
 
 #define MINIDUMP_SIGNATURE "MDMP"
 #define MINIDUMP_VERSION 0x5128A793
@@ -403,6 +403,7 @@ typedef struct DECLSPEC_ALIGN(16) _M128A_my {
 // Format of data for 32-bit fxsave/fxrstor instructions.
 //
 
+#ifndef _AMD64_
 typedef struct _XMM_SAVE_AREA32 {
     WORD   ControlWord;
     WORD   StatusWord;
@@ -423,6 +424,7 @@ typedef struct _XMM_SAVE_AREA32 {
 } XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 #define LEGACY_SAVE_AREA_LENGTH sizeof(XMM_SAVE_AREA32)
+#endif
 
 //
 // Context Frame

@@ -4,10 +4,17 @@
 //! \date 2011
 
 #pragma once
-#include "stdafx.h"
 #include "MiniDumpReader.h"
 #include "PdbCache.h"
+
+#define USE_NATIVE 111
+#define USE_DBGHLP 222
+#define USE_DBGENG 333
+#define WIN32_DBG_API USE_DBGENG
+
+#if WIN32_DBG_API == USE_DBGENG
 #include "StackFrame.h"
+#endif
 
 //! \class CStackFrame
 //! \brief Stack frame.
@@ -116,10 +123,14 @@ private:
 	bool m_bExactMatchBuildAge;       //!< If to require exact match of PDB build age.
     CStackFrame m_StackFrame;       //!< Current stack frame
     std::wstring m_sErrorMsg;       //!< Last error message
-#ifdef _WIN32
+
+#if WIN32_DBG_API == USE_DBGENG
 	std::vector<StackFrameItem> m_winStackFrames;
-	std::size_t m_winStackIdx;
-#endif // _WIN32
+	std::size_t m_winStackIdx = 0;
+#elif WIN32_DBG_API == USE_DBGHLP
+	std::vector<CStackFrame> m_winStackFrames;
+	std::size_t m_winStackIdx = 0;
+	DWORD m_dwThreadId = 0;
+#endif
 
 };
-

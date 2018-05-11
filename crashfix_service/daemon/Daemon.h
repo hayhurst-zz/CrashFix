@@ -226,7 +226,7 @@ protected:
 #ifdef _WIN32
 
 	//! Starts another daemon process (Windows only).
-	int LaunchDaemonProcess(int &nPid);
+	int LaunchDaemonProcess(DWORD &nPid);
 
 	//! Thread function that waits for stop event and terminates the server.
 	static DWORD WINAPI StopWaitingThread(LPVOID lpParam);
@@ -246,11 +246,13 @@ protected:
 	//! Starts CrashFix service.
 	int StartNTService(BOOL bStart=TRUE);
 
-	// Set the service status and report the status to the SCM.
+	//! Set the service status and report the status to the SCM.
     void SetServiceStatus(DWORD dwCurrentState,
         DWORD dwWin32ExitCode = NO_ERROR,
         DWORD dwWaitHint = 0);
 
+	//! Return is MS symbol server enabled
+	bool IsMsSymbolServerEnabled();
 #endif
 
     // General config settings

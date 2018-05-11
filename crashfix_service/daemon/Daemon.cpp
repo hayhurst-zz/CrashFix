@@ -11,6 +11,7 @@
 #include "CSmtp.h"
 #include <iostream>
 #include "base64.h"
+#include "UacHelper.h"
 
 #ifdef _WIN32
 //#include "CrashRpt.h"
@@ -349,6 +350,7 @@ void CDaemon::ReadConfig()
 	// Read pid file name
 	m_sPIDFile = config.getProfileString("PIDFILE", szBuff, 2048);
 	AddPrefix(m_sPIDFile); // Affected by prefix
+	use_app_data_auto(m_sPIDFile);
 
 	// Read webroot dir (where the webapp files located)
 	m_sWebRootDir = config.getProfileString("WEB_ROOT_DIR", szBuff, 2048);
@@ -377,6 +379,7 @@ void CDaemon::ReadConfig()
 	// Reading log file name
 	m_sErrorLogFile = config.getProfileString("ERROR_LOG_PATH", szBuff, 2048);
 	AddPrefix(m_sErrorLogFile);
+	use_app_data_auto(m_sErrorLogFile);
 
 	if(m_sErrorLogFile.empty())
 	{
@@ -404,6 +407,7 @@ void CDaemon::ReadConfig()
 
 	m_sMonitorLogFile = config.getProfileString("MONITOR_LOG_PATH", szBuff, 2048);
 	AddPrefix(m_sMonitorLogFile);
+	use_app_data_auto(m_sMonitorLogFile);
 
 	m_sWebmasterEmail = config.getProfileString("WEBMASTER_EMAIL", szBuff, 2048);
 
@@ -463,7 +467,7 @@ void CDaemon::InitErrorLog()
 	if(!bInitLog)
 	{
 		std::string sErrorMsg = "Couldn't open log file ";
-		sErrorMsg += m_sErrorLogFile;
+		sErrorMsg += strconv::w2a(m_Log.get_path());
 		Die(sErrorMsg.c_str(), true);
 	}
 
@@ -642,6 +646,7 @@ cleanup:
 void CDaemon::SavePidToFile()
 {
 	/* Write pid to pidfile. */
+	CreateDirRecursively(GetFileFolder(strconv::a2w(m_sPIDFile)));
 
 	FILE* f = fopen(m_sPIDFile.c_str(), "wt");
 	if(f==NULL)
@@ -895,7 +900,7 @@ void CDaemon::RunAsMonitor()
 
 	for(;;)
 	{
-		// Wake up regularily
+		// Wake up regularly
 #ifdef _WIN32
 		if(WAIT_OBJECT_0==WaitForSingleObject(m_hEventStop, 60*1000))
 		{
@@ -1037,14 +1042,25 @@ skip:
 }
 
 #ifdef _WIN32
-int CDaemon::LaunchDaemonProcess(int &nPid)
+int CDaemon::LaunchDaemonProcess(DWORD &nPid)
 {
 	std::wstring sExePath = GetModuleName(NULL);
-	std::ostringstream sCmdLine;
-	sCmdLine << strconv::w2a(sExePath);
-	sCmdLine << " --run";
-	std::string str = sCmdLine.str();
-	int nResult = execute(str.c_str(), false, &nPid);
+	int nResult = 0;
+	if (IsMsSymbolServerEnabled())
+	{
+		std::wstring parameters = _T(" --run");
+		TCHAR CurrentDirectory[MAX_PATH] = { 0 };
+		GetCurrentDirectory(MAX_PATH, CurrentDirectory);
+		nResult = UacHelper::RunNonElevated(sExePath.c_str(), parameters.c_str(), CurrentDirectory, &nPid) ? 0 : -1;
+	}
+	else
+	{
+		std::ostringstream sCmdLine;
+		sCmdLine << strconv::w2a(sExePath);
+		sCmdLine << " --run";
+		std::string str = sCmdLine.str();
+		nResult = execute(str.c_str(), false, &nPid);
+	}
 	return nResult;
 }
 #endif
@@ -1290,14 +1306,25 @@ bool CDaemon::RestartDaemonOnCrash()
 #ifdef _WIN32
 
 	std::wstring sExePath = GetModuleName(NULL);
-	std::ostringstream sCmdLine;
-	sCmdLine << strconv::w2a(sExePath);
-	sCmdLine << " --run -c \"";
-	sCmdLine << m_sConfigFile;
-	sCmdLine << "\" --restart-on-crash";
-	std::string str = sCmdLine.str();
-	int nPid = 0;
-	int nResult = execute(str.c_str(), false, &nPid);
+	DWORD nPid = 0;
+	int nResult = 0;
+	if (IsMsSymbolServerEnabled())
+	{
+		std::wstring parameters = _T(" --run -c \"") + strconv::a2w(m_sConfigFile) + _T("\" --restart-on-crash");
+		TCHAR CurrentDirectory[MAX_PATH] = { 0 };
+		GetCurrentDirectory(MAX_PATH, CurrentDirectory);
+		nResult = UacHelper::RunNonElevated(sExePath.c_str(), parameters.c_str(), CurrentDirectory, &nPid) ? 0 : -1;
+	}
+	else
+	{
+		std::ostringstream sCmdLine;
+		sCmdLine << strconv::w2a(sExePath);
+		sCmdLine << " --run -c \"";
+		sCmdLine << m_sConfigFile;
+		sCmdLine << "\" --restart-on-crash";
+		std::string str = sCmdLine.str();
+		nResult = execute(str.c_str(), false, &nPid);
+	}
 
 	if(nResult!=0)
 	{
@@ -1745,7 +1772,7 @@ void WINAPI CDaemon::ServiceMain(DWORD dwArgc, PWSTR *pszArgv)
 	pDaemon->SetServiceStatus(SERVICE_RUNNING);
 
 	// Launch another process
-	int nPid = 0;
+	DWORD nPid = 0;
 	if(0==pDaemon->LaunchDaemonProcess(nPid))
 	{
 		// Enter the monitoring loop
@@ -1806,6 +1833,15 @@ void CDaemon::SetServiceStatus(DWORD dwCurrentState,
 
     // Report the status of the service to the SCM.
     ::SetServiceStatus(m_ServiceStatusHandle, &m_ServiceStatus);
+}
+
+bool CDaemon::IsMsSymbolServerEnabled()
+{
+#ifdef _WIN32
+	return !m_sMsSymbolServer.empty();
+#else
+	return false;
+#endif
 }
 
 DWORD WINAPI CDaemon::StopWaitingThread(LPVOID lpParam)

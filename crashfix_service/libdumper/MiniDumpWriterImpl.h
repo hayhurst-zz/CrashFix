@@ -69,7 +69,7 @@ private:
         ULONG_PTR uResourceDirRva, ULONG uResourceDirSize, VS_FIXEDFILEINFO** ppFixedFileInfo);
 
     BOOL WriteHeader();
-    BOOL WriteStreamDirectory(ULONG uStreamType, ULONG32 uDirectoryRva, ULONG uDataSize);
+    BOOL WriteStreamDirectory(ULONG uStreamType, RVA uDirectoryRva, ULONG uDataSize);
     BOOL WriteSystemInfoStream();
     BOOL WriteMiscInfoStream();
     BOOL WriteExceptionStream();

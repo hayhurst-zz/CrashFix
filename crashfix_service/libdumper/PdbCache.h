@@ -196,6 +196,9 @@ private:
 	//! Get local path from symbol path string
 	std::wstring GetLocalPath(const std::wstring symbol_path);
 
+	//! Is symbol server
+	bool IsSymbolServer(const std::wstring symbol_path);
+
     //! Search dir info.
     struct _SearchDirInfo
     {

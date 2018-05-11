@@ -983,7 +983,10 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 	if(szSymbolSearchDir!=NULL)
 	{
 		std::wstring sSearchDir(szSymbolSearchDir);
-		m_pPdbCache->AddPdbSearchDir(sSearchDir, PDB_USUAL_DIR, true);
+		std::vector<std::wstring> dirs;
+		split_string(sSearchDir, _T(";"), dirs);
+		for(auto& dir : dirs)
+			m_pPdbCache->AddPdbSearchDir(dir, PDB_SYMBOL_STORE, true);
 	}
 
 	sUtf8OutFile = strconv::w2a(szOutFile);
@@ -1037,7 +1040,7 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 
 	doc.BeginDocument("ErrorReport");
 
-	doc. BeginSection("Summary");
+	doc.BeginSection("Summary");
 	
 	// Print CrashRpt version
 #ifdef _WIN32

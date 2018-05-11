@@ -91,11 +91,13 @@ typedef struct _UNWIND_INFO {
 *   OPTIONAL ULONG ExceptionData[]; */
 } UNWIND_INFO, *PUNWIND_INFO;
 
+#ifndef _AMD64_
 typedef struct _RUNTIME_FUNCTION {
     ULONG BeginAddress;
     ULONG EndAddress;
     ULONG UnwindData;
 } RUNTIME_FUNCTION, *PRUNTIME_FUNCTION;
+#endif
 
 #define GetUnwindCodeEntry(info, index) \
     ((info)->UnwindCode[index])

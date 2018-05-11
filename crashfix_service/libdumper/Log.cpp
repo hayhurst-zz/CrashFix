@@ -6,6 +6,7 @@
 #include "stdafx.h"
 #include "Log.h"
 #include "strconv.h"
+#include "Misc.h"
 
 // global log object
 CLog g_log;
@@ -36,6 +37,8 @@ CLog::CLog()
 BOOL CLog::init(std::wstring sPath, bool bRedirectStdStreams)
 {
 	m_path = sPath;
+	if (!CreateDirRecursively(GetFileFolder(m_path)))
+		return FALSE;
 
 #ifdef _WIN32
     bRedirectStdStreams=false; // Disable this in Windows

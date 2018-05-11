@@ -141,6 +141,9 @@
     <ClCompile Include="StackFrame.cpp">
       <Filter>Misc</Filter>
     </ClCompile>
+    <ClCompile Include="StackDumper.cpp">
+      <Filter>Misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasePdbStream.h">
@@ -294,6 +297,9 @@
       <Filter>Misc</Filter>
     </ClInclude>
     <ClInclude Include="BugStore.h">
+      <Filter>Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="StackDumper.h">
       <Filter>Misc</Filter>
     </ClInclude>
   </ItemGroup>

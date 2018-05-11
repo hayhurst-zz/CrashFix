@@ -61,19 +61,8 @@ bool CPdbCache::AddPdbSearchDir(
 	std::wstring local_path = GetLocalPath(sPathToSearchDir);
 
 	// Check if directory really exists.
-#ifdef _WIN32
-	DWORD dwAttrs = GetFileAttributesW(local_path.c_str());
-	if(dwAttrs==INVALID_FILE_ATTRIBUTES || (dwAttrs&FILE_ATTRIBUTE_DIRECTORY)==0)
-		return false; // Directory does not exist.
-#else
-    struct stat st_buf;
-    int status = stat (strconv::w2a(local_path).c_str(), &st_buf);
-    if (status != 0)
-        return false;
-
-    if (!S_ISDIR (st_buf.st_mode))
-        return false;
-#endif
+	if (!IsDirExisting(local_path))
+		return false;
 
     CAutoLock lock(&m_AccessLock);
 
@@ -184,6 +173,9 @@ CPdbCache::FindPdb(
 
     for(it=m_aSearchDirs.begin(); it!=m_aSearchDirs.end(); it++)
     {
+		if (IsSymbolServer(it->first))
+			continue;
+
         _SearchDirInfo& sdi = it->second;
 
 		bStatus = SearchDirectory(sdi.m_sPath, sdi.m_SearchMode, sdi.m_bSearchRecursively,
@@ -577,16 +569,7 @@ bool CPdbCache::TryPdbFile(std::wstring sPdbFileName, std::wstring sPeFileName,
 	FixSlashesInFilePath(sPeFileName);
 
 	// Check if file exists on disk
-	BOOL bExists = FALSE;
-#ifdef _WIN32
-	DWORD dwAttrs = GetFileAttributesW(sPdbFileName.c_str());
-	if(dwAttrs!=INVALID_FILE_ATTRIBUTES && (dwAttrs&FILE_ATTRIBUTE_DIRECTORY)==0)
-		bExists = TRUE;
-#else
-	struct stat st;
-	if(0==stat(strconv::w2a(sPdbFileName).c_str(), &st) && S_ISREG(st.st_mode))
-		bExists = TRUE;
-#endif
+	BOOL bExists = IsDirExisting(sPdbFileName);
 	if(!bExists)
 	{
 		// File does not exist.
@@ -1246,6 +1229,9 @@ bool CPdbCache::DeletePdbFile(std::wstring sPath)
 	std::map<std::wstring, _SearchDirInfo>::iterator it;
 	for(it=m_aSearchDirs.begin(); it!=m_aSearchDirs.end(); it++)
 	{
+		if (IsSymbolServer(it->first))
+			continue;
+
 		_SearchDirInfo& info = it->second;
 		int pos = sPath.find(info.m_sPath);
 		if(pos==0)
@@ -1304,4 +1290,13 @@ std::wstring CPdbCache::GetLocalPath(const std::wstring symbol_path)
 		return local_path;
 	else
 		return symbol_path;
+}
+
+bool CPdbCache::IsSymbolServer(const std::wstring symbol_path)
+{
+	const std::wstring prefix = L"srv*";
+	if (symbol_path.substr(0, prefix.size()) == prefix)
+		return true;
+
+	return false;
 }
