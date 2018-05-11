@@ -114,6 +114,24 @@ bool IsDirExisting(std::wstring sPath)
 	return true;
 }
 
+bool IsDFileExisting(std::wstring sPath)
+{
+#ifdef _WIN32
+	DWORD dwAttrs = GetFileAttributesW(sPath.c_str());
+	if (dwAttrs == INVALID_FILE_ATTRIBUTES || (dwAttrs&FILE_ATTRIBUTE_DIRECTORY) != 0)
+		return false; // File does not exist.
+#else
+	struct stat st_buf;
+	int status = stat(strconv::w2a(local_path).c_str(), &st_buf);
+	if (status != 0)
+		return false;
+
+	if (!S_ISREG(st_buf.st_mode))
+		return false;
+#endif
+	return true;
+}
+
 int CreateDir(std::wstring sPath)
 {
 #ifdef _WIN32
