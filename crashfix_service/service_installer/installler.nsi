@@ -318,9 +318,9 @@ Section "CrashFix Service"
   
   ${SetOutPath} $INSTDIR\bin
   ${File} "..\bin\" "crashfixd.exe"
-  #${File} "..\bin\" "libeay32.dll"
-  #${File} "..\bin\" "msvcp100.dll"
-  #${File} "..\bin\" "msvcr100.dll"  
+  ${File} "..\bin\" "dbgeng.dll"
+  ${File} "..\bin\" "dbghelp.dll"
+  ${File} "..\bin\" "symsrv.dll"  
   ${File} "..\bin\" "uploader.exe"
   ${File} "..\bin\" "uploader_gui.exe"
       

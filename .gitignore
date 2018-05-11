@@ -64,3 +64,4 @@ crashfix_service/test_data/crashreport_x64.zip
 crashfix_service/conf/crashfixd.conf
 crashfix_service/x64/Debug/*.lib
 crashfix_service/x64/Release/*.exe
+.vs
