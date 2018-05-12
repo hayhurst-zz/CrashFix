@@ -288,7 +288,7 @@ protected:
     bool m_bRestartDaemonOnCrash;      //!< Should we restart daemon on errors?
     int m_nPidToMonitor;               //!< ID of the process to monitor.
 	std::string m_sPhpPath;	           //!< PHP folder (optional).
-	bool m_bDumpExceptionThreadOnly;   //!< Dump stack trace of the exception thread only.
+	bool m_bDumpExceptionThreadOnly;   //!< Dump stack trace of the exception thread only (optional).
 	std::string m_sMsSymbolServer;	   //!< Microsoft Symbol Server with local cache (optional).
 	
 	//bool m_bCriticalError;             //!< Were there any critical errors?

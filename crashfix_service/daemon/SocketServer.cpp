@@ -695,7 +695,7 @@ int CSocketServer::GetServerConfigInfo(LPCWSTR szOutFile, std::string& sErrMsg)
 
 	if(f==NULL)
 	{
-		sErrMsg = "Error opening output file for writing";
+		sErrMsg = "Error opening output file for writing " + strconv::w2a(szOutFile);
 		goto exit;
 	}
 
