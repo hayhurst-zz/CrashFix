@@ -5,6 +5,7 @@
 #include <taskschd.h>
 #include <shellapi.h>
 #include <comdef.h>
+#include <Sddl.h>
 
 #pragma comment(lib, "taskschd.lib")
 
@@ -380,4 +381,54 @@ HRESULT UacHelper::CreateMyTask(LPCTSTR pszTaskName, LPCTSTR pszExecutablePath, 
 		*pnPid = nPid;
 	
 	return nPid > 0 ? S_OK : E_FAIL;
+}
+
+////////////////////////////////////////////////
+
+SecurityAttributesMIL::SecurityAttributesMIL()
+{
+	memset(this, 0, sizeof(*this));
+	nLength = sizeof(SECURITY_ATTRIBUTES);
+	bInheritHandle = TRUE;
+	lpSecurityDescriptor = new char[SECURITY_DESCRIPTOR_MIN_LENGTH];
+
+	bool ok = false;
+	do
+	{
+		if (!InitializeSecurityDescriptor(lpSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
+			break;
+
+		if (!SetSecurityDescriptorDacl(lpSecurityDescriptor, TRUE, 0, FALSE))
+			break;
+
+		// "S:(ML;;NW;;;LW)" -> low integrity
+		// "S:(ML;;NW;;;ME)" -> medium integrity
+		// "S:(ML;;NW;;;HI)" -> high integrity
+		PSECURITY_DESCRIPTOR pSD;
+		if (!ConvertStringSecurityDescriptorToSecurityDescriptor(_T("S:(ML;;NW;;;ME)"), SDDL_REVISION_1, &pSD, NULL))
+			break;
+
+		PACL pSacl = NULL;                  // not allocated
+		BOOL fSaclPresent = FALSE;
+		BOOL fSaclDefaulted = FALSE;
+		if (!GetSecurityDescriptorSacl(pSD, &fSaclPresent, &pSacl, &fSaclDefaulted))
+			break;
+
+		if (!SetSecurityDescriptorSacl(lpSecurityDescriptor, TRUE, pSacl, FALSE))
+			break;
+
+		ok = true;
+
+	} while (false);
+
+	if (!ok)
+	{
+		delete[] lpSecurityDescriptor;
+		lpSecurityDescriptor = nullptr;
+	}
+}
+
+SecurityAttributesMIL::~SecurityAttributesMIL()
+{
+	delete[] lpSecurityDescriptor;
 }

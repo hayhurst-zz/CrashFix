@@ -14,3 +14,10 @@ protected:
 	static BOOL CommonShellExec(LPCTSTR pszVerb, LPCTSTR pszPath, LPCTSTR pszParameters, LPCTSTR pszDirectory, DWORD* pnPid);
 };
 
+// security attributes for medium integrity level
+class SecurityAttributesMIL : public SECURITY_ATTRIBUTES
+{
+public:
+	SecurityAttributesMIL();
+	~SecurityAttributesMIL();
+};
