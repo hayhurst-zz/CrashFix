@@ -6,6 +6,8 @@
 #include <windows.h>
 #include <dbgeng.h>
 
+class CLog;
+
 struct StackFrameItem {
 	std::string moduleName;
 	std::string methodName;
@@ -31,7 +33,7 @@ public:
 	// IDebugOutputCallbacks
 	STDMETHOD(Output)(THIS_ _In_ ULONG Mask, _In_ PCSTR Text);
 
-	std::vector<StackFrameItem> build();
+	std::vector<StackFrameItem> build(DWORD dwThreadId);
 
 	void clear() {
 		buffer.clear();
@@ -44,10 +46,16 @@ public:
 		return true;
 	}
 
+	void setLogger(CLog* pLog)
+	{
+		m_pLog = pLog;
+	}
+
 private:
 	std::stringstream buffer;
 	DEBUG_STACK_FRAME_EX* pFrames=nullptr;
 	std::size_t frameCount=0;
+	CLog* m_pLog = nullptr;
 };
 
 class StackFrameDumper {
@@ -59,27 +67,18 @@ class StackFrameDumper {
 public:
 	StackFrameDumper() :client(nullptr), control(nullptr), symbols(nullptr) {}
 	StackFrameDumper(const StackFrameDumper&) = delete;
-	~StackFrameDumper() {
+
+	~StackFrameDumper() 
+	{
 		if (client) client->Release();
 		if (control) control->Release();
 		if (symbols) symbols->Release();
 	}
-	HRESULT init() {
-		HRESULT status = S_OK;
-		status = DebugCreate(__uuidof(IDebugClient4), (void**)&client);
-		if (status != S_OK) return status;
-		status = client->QueryInterface(__uuidof(IDebugControl5), (void**)&control);
-		if (status != S_OK) return status;
-		status = client->QueryInterface(__uuidof(IDebugSymbols3), (void**)&symbols);
-		if (status != S_OK) return status;
-		status = symbols->SetSymbolOptions(0x30237); // flag used by WinDbg
-		if (status != S_OK) return status;
-		status = client->SetOutputCallbacks(&callback);
-		if (status != S_OK) return status;
-		return status;
-	}
 
-	HRESULT set_direcoties(const char* symbol_dirs, const char* image_dirs = nullptr) {
+	HRESULT init(CLog* pLog);
+
+	HRESULT set_direcoties(const char* symbol_dirs, const char* image_dirs = nullptr) 
+	{
 		HRESULT status = S_OK;
 		if (symbol_dirs) {
 			status = symbols->SetSymbolPath(symbol_dirs);
@@ -107,7 +106,7 @@ public:
 		return status;
 	}
 
-	std::vector<StackFrameItem> dumpFrame(
+	std::vector<StackFrameItem> dumpFrame(DWORD dwThreadId,
 		const char* dumpFileName, ULONG64 frameOffset = 0,
 		ULONG64 stackOffset = 0, ULONG64 instructionOffset = 0
 	);

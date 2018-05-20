@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "StackFrame.h"
+#include "Log.h"
 
 #pragma comment(lib, "dbgeng.lib")
 
@@ -35,7 +36,30 @@ STDMETHODIMP_(ULONG) StackFrameDumperCallback::AddRef(THIS) {
 	return 1;
 }
 
-std::vector<StackFrameItem> StackFrameDumper::dumpFrame(const char* dumpFileName, ULONG64 frameOffset /*= 0*/, ULONG64 stackOffset /*= 0*/, ULONG64 instructionOffset /*= 0 */)
+HRESULT StackFrameDumper::init(CLog* pLog)
+{
+	HRESULT status = S_OK;
+	status = DebugCreate(__uuidof(IDebugClient4), (void**)&client);
+	if (status != S_OK) return status;
+
+	status = client->QueryInterface(__uuidof(IDebugControl5), (void**)&control);
+	if (status != S_OK) return status;
+
+	status = client->QueryInterface(__uuidof(IDebugSymbols3), (void**)&symbols);
+	if (status != S_OK) return status;
+
+	status = symbols->SetSymbolOptions(0x30237); // flag used by WinDbg
+	if (status != S_OK) return status;
+
+	status = client->SetOutputCallbacks(&callback);
+	if (status != S_OK) return status;
+
+	callback.setLogger(pLog);
+
+	return status;
+}
+
+std::vector<StackFrameItem> StackFrameDumper::dumpFrame(DWORD dwThreadId, const char* dumpFileName, ULONG64 frameOffset /*= 0*/, ULONG64 stackOffset /*= 0*/, ULONG64 instructionOffset /*= 0 */)
 {
 	if (client->OpenDumpFile(dumpFileName) == S_OK) {
 		if (control->WaitForEvent(DEBUG_WAIT_DEFAULT, INFINITE) == S_OK) {
@@ -54,7 +78,7 @@ std::vector<StackFrameItem> StackFrameDumper::dumpFrame(const char* dumpFileName
 					//for (auto i = 0; i < filled; ++i) {
 					//	std::cout << frames[i].FrameNumber << ": " << frames[i].InstructionOffset << std::endl;
 					//}
-					return callback.build();
+					return callback.build(dwThreadId);
 				}
 			}
 		}
@@ -64,9 +88,11 @@ std::vector<StackFrameItem> StackFrameDumper::dumpFrame(const char* dumpFileName
 	return{};
 }
 
-std::vector<StackFrameItem> StackFrameDumperCallback::build()
+std::vector<StackFrameItem> StackFrameDumperCallback::build(DWORD dwThreadId)
 {
 	std::string content = buffer.str();
+	if(m_pLog)
+		m_pLog->write(1, "Dump stack frames for thread 0x%x:\n%s\n", dwThreadId, content.c_str());
 	
 	std::string line;
 	StackFrameItem item;

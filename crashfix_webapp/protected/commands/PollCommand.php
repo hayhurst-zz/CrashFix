@@ -291,7 +291,7 @@ class PollCommand extends CConsoleCommand
 					
 			// Update DebugInfo table record
 			if(!$debugInfo->save())
-				throw new Exception('Error saving debug info AR to database.');
+				throw new Exception('Error saving debug info AR to database. '.json_encode($debugInfo->getErrors()));
 			
 			// Commit transaction.
 			$transaction->commit();

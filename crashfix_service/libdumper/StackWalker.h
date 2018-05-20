@@ -78,7 +78,7 @@ public:
     //! @param[in] pPdbCache PDB symbol cache
     //! @param[in] dwThreadId Thread ID
 	//! @param[in] bExactMatchBuildAge If to require build age match.
-    bool Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge = TRUE);
+    bool Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge = TRUE, CLog* pLog = nullptr);
 
 	//! Frees all used resources.
 	void Destroy();
@@ -123,6 +123,7 @@ private:
 	bool m_bExactMatchBuildAge;       //!< If to require exact match of PDB build age.
     CStackFrame m_StackFrame;       //!< Current stack frame
     std::wstring m_sErrorMsg;       //!< Last error message
+	DWORD m_dwThreadId = 0;
 
 #if WIN32_DBG_API == USE_DBGENG
 	std::vector<StackFrameItem> m_winStackFrames;
@@ -130,7 +131,6 @@ private:
 #elif WIN32_DBG_API == USE_DBGHLP
 	std::vector<CStackFrame> m_winStackFrames;
 	std::size_t m_winStackIdx = 0;
-	DWORD m_dwThreadId = 0;
 #endif
 
 };

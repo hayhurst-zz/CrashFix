@@ -1209,7 +1209,7 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 			BOOL bUnwindNotAvail = FALSE;
 
 			CStackWalker StackWalker;
-			bool bInit = StackWalker.Init(pMiniDump, m_pPdbCache, pThread->m_uThreadId, bExactMatchBuildAge);
+			bool bInit = StackWalker.Init(pMiniDump, m_pPdbCache, pThread->m_uThreadId, bExactMatchBuildAge, m_pLog);
 			if(bInit)
 			{
 				sStackTrace.clear();
@@ -1637,13 +1637,13 @@ exit:
 		// Write destination PDB filename
 		doc.PutRecord("ImportedFileName",  "%s", strconv::w2utf8(sDstFileName).c_str());
 
-		if(pHeaders!=NULL)
+		if(!sGUID.empty())
 		{
 			// Write GUID
 			doc.PutRecord("GUID",  "%s", strconv::w2utf8(sGUID).c_str());
 
 			// Write Age
-			sprintf(szBuffer, "%d", pHeaders->GetAge());
+			sprintf(szBuffer, "%d", dwAge);
 			doc.PutRecord("Age",  "%s", szBuffer);
 		}
 

@@ -229,7 +229,7 @@ void CLog::log_last_error(int level, const char* szErrorMsg)
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_ALLOCATE_BUFFER,
 		NULL, le, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&msg, 0, NULL);
-	writeW(level, L"%s. Error %lu(%XH): %s", szErrorMsg, le,le,msg);
+	writeW(level, L"%s. Error %lu(%XH): %s", (LPCTSTR)CA2W(szErrorMsg), le,le,msg);
 	GlobalFree(msg);
 #else
     const char* szError = strerror(errno);

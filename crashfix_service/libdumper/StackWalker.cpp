@@ -35,16 +35,14 @@ CStackWalker::~CStackWalker()
     Destroy();
 }
 
-bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge)
+bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge, CLog* pLog)
 {
 	bool bResult = false;
 	m_sErrorMsg = L"Unspecified error.";
 	BOOL bGetContext = FALSE;
 	DWORD dwMachineType = 0;
 	MiniDumpSystemInfo* pSysInfo = NULL;
-#if WIN32_DBG_API == USE_DBGHLP
 	m_dwThreadId = dwThreadId;
-#endif
 
     // Validate input params
     if(pMiniDump==NULL ||
@@ -121,7 +119,7 @@ bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD 
 	{
 		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
 		if (!g_winFrameDumper_initilaized) {
-			if (g_winFrameDumper.init() != S_OK) {
+			if (g_winFrameDumper.init(pLog) != S_OK) {
 				m_sErrorMsg = L"Failed to initialize debug dumper!";
 				return false;
 			}
@@ -183,7 +181,7 @@ BOOL CStackWalker::FirstStackFrame()
 #if WIN32_DBG_API == USE_DBGENG
 	{
 		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
-		m_winStackFrames = g_winFrameDumper.dumpFrame(
+		m_winStackFrames = g_winFrameDumper.dumpFrame(m_dwThreadId, 
 			m_pMdmpReader->GetFileName().c_str(), m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC
 		);
 	}
