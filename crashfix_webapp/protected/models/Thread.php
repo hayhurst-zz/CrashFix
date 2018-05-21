@@ -121,6 +121,8 @@ class Thread extends CActiveRecord
 		$criteria=new CDbCriteria;
 		$criteria->compare('thread_id', $this->id);		
 		$criteria->addCondition('symbol_name IS NOT NULL');
+		$criteria->addCondition("LOCATE('BaseThreadInitThunk', symbol_name) = 0");
+		$criteria->addCondition("LOCATE('RtlUserThreadStart', symbol_name) = 0");
 		$criteria->order = 'id DESC';
 		$stackFrame = StackFrame::model()->find($criteria);
 		if($stackFrame===null)
