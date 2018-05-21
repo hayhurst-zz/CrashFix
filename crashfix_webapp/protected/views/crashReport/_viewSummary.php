@@ -212,7 +212,12 @@ $this->widget('zii.widgets.CDetailView', array(
         ),	
 		'product_type',
 		'cpu_architecture',
-		'cpu_count'
+		'cpu_count',
+		array(        
+			'name'=>'physical_memory_kbytes',
+            'type'=>'raw',
+            'value'=>($model->physical_memory_kbytes!=null?MiscHelpers::fileSizeToStr($model->physical_memory_kbytes*1024):null),
+        )
 	),
 )); 
 

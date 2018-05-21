@@ -519,7 +519,8 @@ class m120515_122132_initial extends CDbMigration
 					'cpu_count'=>'INTEGER',
 					'gui_resource_count'=>'INTEGER',
 					'open_handle_count'=>'INTEGER',
-					'memory_usage_kbytes'=>'INTEGER'	
+					'memory_usage_kbytes'=>'INTEGER',
+					'physical_memory_kbytes'=>'INTEGER'	
 				)
 			);
 		

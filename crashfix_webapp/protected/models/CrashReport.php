@@ -718,6 +718,7 @@ class CrashReport extends CActiveRecord
 			'gui_resource_count'=>'GUI Resource Count',			
 			'open_handle_count'=>'Open Handle Count',
 			'memory_usage_kbytes'=>'Memory Usage',
+			'physical_memory_kbytes'=>'Physical Memory',
 		);
 	}
 

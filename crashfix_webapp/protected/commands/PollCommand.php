@@ -644,6 +644,7 @@ class PollCommand extends CConsoleCommand
 			$guiResourceCount = (int)$elemSummary->GUIResourceCount;
 			$openHandleCount = $elemSummary->OpenHandleCount;
 			$memoryUsageKbytes = $elemSummary->MemoryUsageKbytes;
+			$physicalMemoryKbytes = $elemSummary->PhysicalMemoryKbytes;
 			$exceptionType = (string)$elemSummary->ExceptionType;
 			$exceptionAddress = $elemSummary->ExceptionAddress;
 			$sehExceptionCode = $elemSummary->SEHExceptionCode;			
@@ -684,6 +685,7 @@ class PollCommand extends CConsoleCommand
 			$crashReport->cpu_count = $cpuCount;
 			$crashReport->gui_resource_count = $guiResourceCount;
 			$crashReport->memory_usage_kbytes = $memoryUsageKbytes;
+			$crashReport->physical_memory_kbytes = $physicalMemoryKbytes;
 			$crashReport->open_handle_count = $openHandleCount;
 			$crashReport->exception_type = $exceptionType;			
             
