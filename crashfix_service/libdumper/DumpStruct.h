@@ -72,7 +72,13 @@ typedef enum _MINIDUMP_STREAM_TYPE {
     MemoryInfoListStream        = 16,
     ThreadInfoListStream        = 17,
     HandleOperationListStream   = 18,
-    LastReservedStream          = 0xffff
+    TokenStream                 = 19,
+    JavaScriptDataStream        = 20,
+    SystemMemoryInfoStream      = 21,
+    ProcessVmCountersStream     = 22,
+    IptTraceStream              = 23,
+    ThreadNamesStream           = 24,
+	LastReservedStream          = 0xffff
 } MINIDUMP_STREAM_TYPE;
 
 
@@ -260,6 +266,133 @@ typedef struct _MINIDUMP_MEMORY64_LIST {
     RVA64 BaseRva;
     MINIDUMP_MEMORY_DESCRIPTOR64 MemoryRanges [1];
 } MINIDUMP_MEMORY64_LIST, *PMINIDUMP_MEMORY64_LIST;
+
+#pragma pack(4)
+typedef struct _MINIDUMP_SYSTEM_BASIC_INFORMATION {
+	ULONG TimerResolution;
+	ULONG PageSize;
+	ULONG NumberOfPhysicalPages;
+	ULONG LowestPhysicalPageNumber;
+	ULONG HighestPhysicalPageNumber;
+	ULONG AllocationGranularity;
+	ULONG64 MinimumUserModeAddress;
+	ULONG64 MaximumUserModeAddress;
+	ULONG64 ActiveProcessorsAffinityMask;
+	ULONG NumberOfProcessors;
+} MINIDUMP_SYSTEM_BASIC_INFORMATION, *PMINIDUMP_SYSTEM_BASIC_INFORMATION;
+
+typedef struct _MINIDUMP_SYSTEM_FILECACHE_INFORMATION {
+	ULONG64 CurrentSize;
+	ULONG64 PeakSize;
+	ULONG PageFaultCount;
+	ULONG64 MinimumWorkingSet;
+	ULONG64 MaximumWorkingSet;
+	ULONG64 CurrentSizeIncludingTransitionInPages;
+	ULONG64 PeakSizeIncludingTransitionInPages;
+	ULONG TransitionRePurposeCount;
+	ULONG Flags;
+} MINIDUMP_SYSTEM_FILECACHE_INFORMATION, *PMINIDUMP_SYSTEM_FILECACHE_INFORMATION;
+
+typedef struct _MINIDUMP_SYSTEM_BASIC_PERFORMANCE_INFORMATION {
+	ULONG64 AvailablePages;
+	ULONG64 CommittedPages;
+	ULONG64 CommitLimit;
+	ULONG64 PeakCommitment;
+} MINIDUMP_SYSTEM_BASIC_PERFORMANCE_INFORMATION, *PMINIDUMP_SYSTEM_BASIC_PERFORMANCE_INFORMATION;
+
+typedef struct _MINIDUMP_SYSTEM_PERFORMANCE_INFORMATION {
+	ULONG64 IdleProcessTime;
+	ULONG64 IoReadTransferCount;
+	ULONG64 IoWriteTransferCount;
+	ULONG64 IoOtherTransferCount;
+	ULONG IoReadOperationCount;
+	ULONG IoWriteOperationCount;
+	ULONG IoOtherOperationCount;
+	ULONG AvailablePages;
+	ULONG CommittedPages;
+	ULONG CommitLimit;
+	ULONG PeakCommitment;
+	ULONG PageFaultCount;
+	ULONG CopyOnWriteCount;
+	ULONG TransitionCount;
+	ULONG CacheTransitionCount;
+	ULONG DemandZeroCount;
+	ULONG PageReadCount;
+	ULONG PageReadIoCount;
+	ULONG CacheReadCount;
+	ULONG CacheIoCount;
+	ULONG DirtyPagesWriteCount;
+	ULONG DirtyWriteIoCount;
+	ULONG MappedPagesWriteCount;
+	ULONG MappedWriteIoCount;
+	ULONG PagedPoolPages;
+	ULONG NonPagedPoolPages;
+	ULONG PagedPoolAllocs;
+	ULONG PagedPoolFrees;
+	ULONG NonPagedPoolAllocs;
+	ULONG NonPagedPoolFrees;
+	ULONG FreeSystemPtes;
+	ULONG ResidentSystemCodePage;
+	ULONG TotalSystemDriverPages;
+	ULONG TotalSystemCodePages;
+	ULONG NonPagedPoolLookasideHits;
+	ULONG PagedPoolLookasideHits;
+	ULONG AvailablePagedPoolPages;
+	ULONG ResidentSystemCachePage;
+	ULONG ResidentPagedPoolPage;
+	ULONG ResidentSystemDriverPage;
+	ULONG CcFastReadNoWait;
+	ULONG CcFastReadWait;
+	ULONG CcFastReadResourceMiss;
+	ULONG CcFastReadNotPossible;
+	ULONG CcFastMdlReadNoWait;
+	ULONG CcFastMdlReadWait;
+	ULONG CcFastMdlReadResourceMiss;
+	ULONG CcFastMdlReadNotPossible;
+	ULONG CcMapDataNoWait;
+	ULONG CcMapDataWait;
+	ULONG CcMapDataNoWaitMiss;
+	ULONG CcMapDataWaitMiss;
+	ULONG CcPinMappedDataCount;
+	ULONG CcPinReadNoWait;
+	ULONG CcPinReadWait;
+	ULONG CcPinReadNoWaitMiss;
+	ULONG CcPinReadWaitMiss;
+	ULONG CcCopyReadNoWait;
+	ULONG CcCopyReadWait;
+	ULONG CcCopyReadNoWaitMiss;
+	ULONG CcCopyReadWaitMiss;
+	ULONG CcMdlReadNoWait;
+	ULONG CcMdlReadWait;
+	ULONG CcMdlReadNoWaitMiss;
+	ULONG CcMdlReadWaitMiss;
+	ULONG CcReadAheadIos;
+	ULONG CcLazyWriteIos;
+	ULONG CcLazyWritePages;
+	ULONG CcDataFlushes;
+	ULONG CcDataPages;
+	ULONG ContextSwitches;
+	ULONG FirstLevelTbFills;
+	ULONG SecondLevelTbFills;
+	ULONG SystemCalls;
+
+	ULONG64 CcTotalDirtyPages;
+	ULONG64 CcDirtyPageThreshold;
+
+	LONG64 ResidentAvailablePages;
+	ULONG64 SharedCommittedPages;
+} MINIDUMP_SYSTEM_PERFORMANCE_INFORMATION, *PMINIDUMP_SYSTEM_PERFORMANCE_INFORMATION;
+
+typedef struct _MINIDUMP_SYSTEM_MEMORY_INFO_1 {
+	USHORT Revision;
+	USHORT Flags;
+
+	MINIDUMP_SYSTEM_BASIC_INFORMATION BasicInfo;
+	MINIDUMP_SYSTEM_FILECACHE_INFORMATION FileCacheInfo;
+	MINIDUMP_SYSTEM_BASIC_PERFORMANCE_INFORMATION BasicPerfInfo;
+	MINIDUMP_SYSTEM_PERFORMANCE_INFORMATION PerfInfo;
+} MINIDUMP_SYSTEM_MEMORY_INFO_1, *PMINIDUMP_SYSTEM_MEMORY_INFO_1;
+#pragma pack()
 
 //-------------------------------------------------------------------------
 // Excerpt from winnt.h

@@ -124,7 +124,7 @@ struct MiniDumpMiscInfo
     BOOL m_bTimesValid;                  //!<
     time_t m_ProcessCreateTime;          //!< Process creation time
     ULONG m_uProcessUserTime;            //!< Process time in user mode
-    ULONG m_uProcessKernelTime;          //!< Process time in kenel mode
+    ULONG m_uProcessKernelTime;          //!< Process time in kernel mode
     BOOL m_bPowerInfoValid;              //!<
     ULONG m_uProcessorMaxMhz;            //!<
     ULONG m_uProcessorCurrentMhz;        //!<
@@ -228,6 +228,12 @@ struct MiniDumpMemRange
     ULONG64 m_uRva;         //!< Memory range RVA
 };
 
+//! Describes system memory info
+struct MiniDumpSysMemInfo
+{
+	ULONG64 m_uPhysicalMemSize = 0;  //!< Usable Physical Memory Size
+};
+
 //! Minidump block internal layout
 struct MiniDumpBlockInfo
 {
@@ -309,7 +315,10 @@ public:
     //! Reads memory ranges from minidump
     BOOL ReadMemory(DWORD64 lpBaseAddress, PVOID lpBuffer, DWORD nSize, LPDWORD lpNumberOfBytesRead);
     
-    //! Converts stream type to string
+	//! Returns system memory info
+	MiniDumpSysMemInfo* GetSysMemInfo();
+	
+	//! Converts stream type to string
     static std::wstring StreamTypeToStr(ULONG uStreamType);
 
     //! Converts minidump type constant to string
@@ -358,7 +367,10 @@ private:
 	//! Reads full memory list stream
     BOOL ReadMemory64ListStream(ULONG uRva, ULONG uSize);
 
-    //! Retrieves a string by its RVA
+	//! Reads system memory info stream
+	BOOL ReadSystemMemoryInfoStream(ULONG uRva, ULONG uSize);
+	
+	//! Retrieves a string by its RVA
     BOOL GetString(ULONG uRva, std::wstring& sString);
 
     //! Adds a block info to minidump layout
@@ -375,7 +387,8 @@ private:
     std::vector<MiniDumpThreadInfo> m_aThreads;   //!< The list of threads
     std::map<DWORD, int> m_ThreadIndex;           //!< Index for fast accessing threads by thread ID
     std::vector<MiniDumpMemRange> m_aMemRanges;   //!< Memory ranges
-    std::multimap<ULONG, MiniDumpBlockInfo> m_Layout;    //!< Minidump internal layout
+	MiniDumpSysMemInfo	m_SysMemInfo;			  //!< System memory info
+    std::multimap<ULONG64, MiniDumpBlockInfo> m_Layout;    //!< Minidump internal layout
 	std::wstring m_filename;
 };
 

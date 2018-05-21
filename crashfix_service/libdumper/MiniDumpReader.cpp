@@ -146,6 +146,12 @@ BOOL CMiniDumpReader::Init(std::wstring sFileName)
 					goto exit;
             }
             break;
+        case SystemMemoryInfoStream:
+            {
+                if(!ReadSystemMemoryInfoStream(si.m_uDataRva, si.m_uDataSize))
+					goto exit;
+            }
+            break;
         case UnusedStream:
             {
                 // Do nothing
@@ -189,7 +195,7 @@ BOOL CMiniDumpReader::AddBlockInfo(MiniDumpBlockInfo& bi)
     if(bi.m_uSize==0)
         return FALSE;
 
-    m_Layout.insert(std::pair<ULONG, MiniDumpBlockInfo>(bi.m_uRVA, bi));
+    m_Layout.insert(std::pair<ULONG64, MiniDumpBlockInfo>(bi.m_uRVA, bi));
 
     return TRUE;
 }
@@ -593,6 +599,24 @@ BOOL CMiniDumpReader::ReadMemory64ListStream(ULONG uRva, ULONG uSize)
     return TRUE;
 }
 
+BOOL CMiniDumpReader::ReadSystemMemoryInfoStream(ULONG uRva, ULONG uSize)
+{
+	MINIDUMP_SYSTEM_MEMORY_INFO_1* pSysMemInfoStream =
+		(MINIDUMP_SYSTEM_MEMORY_INFO_1*)m_fm.CreateView(uRva, uSize);
+	if (pSysMemInfoStream == NULL)
+		return FALSE;
+	
+	m_SysMemInfo.m_uPhysicalMemSize = (ULONG64)pSysMemInfoStream->BasicInfo.PageSize * pSysMemInfoStream->BasicInfo.NumberOfPhysicalPages;
+
+	MiniDumpBlockInfo bi;
+	bi.m_sId = L"MINIDUMP_SYSTEM_MEMORY_INFO";
+	bi.m_uRVA = uRva;
+	bi.m_uSize = uSize;
+	AddBlockInfo(bi);
+
+	return TRUE;
+}
+
 BOOL CMiniDumpReader::GetString(ULONG uRva, std::wstring& sString)
 {
     sString.clear();
@@ -862,6 +886,14 @@ BOOL CMiniDumpReader::ReadMemory(
     return FALSE;
 }
 
+MiniDumpSysMemInfo* CMiniDumpReader::GetSysMemInfo()
+{
+	if (!m_bInitialized)
+		return NULL;
+
+	return &m_SysMemInfo;
+}
+
 int CMiniDumpReader::FindModuleIndexByAddr(DWORD64 Address)
 {
     // Find a module that owns the provided memory address
@@ -956,7 +988,7 @@ MiniDumpBlockInfo* CMiniDumpReader::GetLayoutBlock(int nBlock)
     if(nBlock<0 || nBlock>=(int)m_Layout.size())
         return NULL;
 
-    std::multimap<ULONG, MiniDumpBlockInfo>::iterator it = m_Layout.begin();
+    std::multimap<ULONG64, MiniDumpBlockInfo>::iterator it = m_Layout.begin();
 
     int i;
     for(i=0; i<nBlock; i++) it++;

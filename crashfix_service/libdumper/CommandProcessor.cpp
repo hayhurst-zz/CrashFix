@@ -958,6 +958,7 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 	std::string sUtf8OutFile;
     MiniDumpExceptionInfo* pExcInfo = NULL;
     MiniDumpSystemInfo* pSysInfo = NULL;
+	MiniDumpSysMemInfo* pSysMemInfo = NULL;
 	std::wstring sStackTrace;
 
 	if(m_pLog==NULL)
@@ -1015,6 +1016,7 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 	{
 		pExcInfo = pMiniDump->GetExceptionInfo();
 		pSysInfo = pMiniDump->GetSystemInfo();
+		pSysMemInfo = pMiniDump->GetSysMemInfo();
 	}
 
 	//if(pSysInfo && pSysInfo->m_uProcessorArchitecture != PROCESSOR_ARCHITECTURE_INTEL)
@@ -1106,6 +1108,11 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 	doc.PutRecord("OpenHandleCount", "%s", strconv::w2a(pCrashDesc->GetOpenHandleCount()).c_str());
 
 	doc.PutRecord("MemoryUsageKbytes", "%s", strconv::w2a(pCrashDesc->GetMemoryUsage()).c_str());
+
+	if(pSysMemInfo)
+	{
+		doc.PutRecord("PhysicalMemoryKbytes", "%llu", pSysMemInfo->m_uPhysicalMemSize / 1024);
+	}
 
 	doc.PutRecord("ExceptionType", "%u %s", pCrashDesc->GetExceptionType(),
 		strconv::w2a(pCrashDesc->ExceptionTypeToStr(pCrashDesc->GetExceptionType())).c_str());
