@@ -912,12 +912,12 @@ class CrashReport extends CActiveRecord
 	{
 		$criteria=new CDbCriteria;
 		$criteria->compare('crashreport_id', $this->id);								
-		$criteria->order = 'thread_id ASC';        
+		$criteria->order = 'id ASC';
         
 		$dataProvider = new CActiveDataProvider('Thread', array(
 			'criteria'=>$criteria,
             'sort'=>array(
-                'defaultOrder'=>'thread_id ASC'
+                'defaultOrder'=>'id ASC'
             ),
             'pagination'=>false
 		));

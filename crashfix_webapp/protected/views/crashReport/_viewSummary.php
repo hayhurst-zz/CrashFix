@@ -156,7 +156,7 @@ $this->widget('zii.widgets.CDetailView', array(
 
 <?php
 
-$text = $model->exception_thread_id!=0?'0x'.dechex($model->exception_thread_id):null;
+$text = $model->exception_thread_id!=0?$model->exception_thread_id:null;
 $exceptionThread = $model->getExceptionThread();
 if($exceptionThread)
 {

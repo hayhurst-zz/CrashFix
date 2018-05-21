@@ -9,7 +9,7 @@
                 array(
                     'name' => 'thread_id',
                     'type' => 'text',
-                    'value' => '\'0x\'.dechex($data->thread_id)',
+                    'value' => '$data->thread_id',
                 ),
                 array(
                     'header' => 'Exception',
@@ -29,7 +29,7 @@
             ),
         ));
     } else {
-        echo '<div class="quiet">Viewing stack trace for thread 0x' . dechex($threadModel->thread_id) . '</div>';
+        echo '<div class="quiet">Viewing stack trace for thread ' . $threadModel->thread_id . '</div>';
 
         $this->widget('zii.widgets.grid.CGridView', array(
             'dataProvider' => $stackTrace,
