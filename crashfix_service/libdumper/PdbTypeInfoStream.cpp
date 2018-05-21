@@ -50,7 +50,7 @@ BOOL CPdbTypeInfoStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream)
         if(!bRead || dwBytesRead!=wBlockSize)
             break;
 
-        g_log.writeW(0, L"BLOCK length = %d\n", wBlockSize);
+        g_log.write(0, "BLOCK length = %d\n", wBlockSize);
 
         g_log.write_raw(0, buf, wBlockSize);
 

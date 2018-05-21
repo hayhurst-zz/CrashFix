@@ -175,22 +175,22 @@ void CLog::print_timestamp()
 // @...		(IN) argument list
 //-------------------------------------------------------------------------
 
-void CLog::writeW(int level, const wchar_t* fmt, ...)
-{
-	if(m_path.empty())
-		return;
-
-	if(level<=m_level && m_LogFile!=NULL)
-	{
-	    print_timestamp();
-
-		va_list args;
-		va_start(args,fmt);
-		vfwprintf(m_LogFile, fmt, args);
-
-		fflush(m_LogFile);
-	}
-}
+//void CLog::writeW(int level, const wchar_t* fmt, ...)
+//{
+//	if(m_path.empty())
+//		return;
+//
+//	if(level<=m_level && m_LogFile!=NULL)
+//	{
+//	    print_timestamp();
+//
+//		va_list args;
+//		va_start(args,fmt);
+//		vfwprintf(m_LogFile, fmt, args);
+//
+//		fflush(m_LogFile);
+//	}
+//}
 
 void CLog::write(int level, const char* fmt, ...)
 {
@@ -229,7 +229,7 @@ void CLog::log_last_error(int level, const char* szErrorMsg)
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_ALLOCATE_BUFFER,
 		NULL, le, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR)&msg, 0, NULL);
-	writeW(level, L"%s. Error %lu(%XH): %s", (LPCTSTR)CA2W(szErrorMsg), le,le,msg);
+	write(level, "%s. Error %lu(%XH): %s", szErrorMsg, le, le, (LPCSTR)CW2A(msg, CP_UTF8));
 	GlobalFree(msg);
 #else
     const char* szError = strerror(errno);
