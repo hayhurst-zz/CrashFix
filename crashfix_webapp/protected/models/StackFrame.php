@@ -72,7 +72,7 @@ class StackFrame extends CActiveRecord
 			if(isset($this->module_id) && isset($this->module))
 			{
 				$moduleName = $this->module->name;
-				$title = $title.$moduleName.'!';			
+				$title = $title.$moduleName.'!'.$this->offs_in_module.' ';
 			}
 			
 			if(isset($this->symbol_name))

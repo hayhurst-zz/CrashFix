@@ -1233,8 +1233,8 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 					{
 						sFrameTitle += pStackFrame->m_sModuleName;
 						sFrameTitle += L"!";
-						sprintf(szBuffer, "%u ", pStackFrame->m_dwOffsInModule);
-						sFrameTitle += strconv::utf82w(szBuffer);
+						//sprintf(szBuffer, "%u ", pStackFrame->m_dwOffsInModule);
+						//sFrameTitle += strconv::utf82w(szBuffer);
 					}
 					else
 					{
@@ -1245,6 +1245,8 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 					if(!pStackFrame->m_sSymbolName.empty())
 					{
 						sFrameTitle += strconv::a2w(pStackFrame->m_sSymbolName);
+						sprintf(szBuffer, "+0x%" PRIX32 " ", pStackFrame->m_dwOffsInSymbol);
+						sFrameTitle += strconv::a2w(szBuffer);
 					}
 
 					if(!pStackFrame->m_sSrcFileName.empty())

@@ -26,6 +26,11 @@
                     'type' => 'raw',
                     'value' => 'CHtml::link("View stack trace", array("crashReport/view", "tab"=>"Threads", "id"=>$data->crashreport_id, "thread"=>$data->id))',
                 ),
+                array(
+                    'header' => 'Stack Trace MD5',
+                    'type' => 'text',
+                    'value' => '$data->stack_trace_md5',
+                ),
             ),
         ));
     } else {
