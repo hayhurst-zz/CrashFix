@@ -16,6 +16,7 @@ be found in the Authors.txt file in the root of the source tree.
 #include <atlstr.h>
 
 typedef DWORD RVA;
+class CStackFrame;
 
 namespace StackDumper {
 
@@ -132,25 +133,33 @@ public:
     CMiniDumpReader();
     ~CMiniDumpReader();
 
-    /* Operations */
+	/* Operations */
 	void SetDirecoties(CString sSymSearchPath);
 
     // Opens a minidump (DMP) file
     int Open(CString sFileName);
 
-    // Retreives stack trace for specified thread ID
-	int StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset = 0, ULONG64 stackOffset = 0, ULONG64 instructionOffset = 0);
+	// Dump stack frames
+	bool DumpFrame(ULONG32 dwThreadId, ULONG64 frameOffset, ULONG64 stackOffset, ULONG64 instructionOffset, std::vector<CStackFrame>& stackFrames);
+
+	// Dump module symbol status
+	std::map<std::string, bool> DumpModuleSymbolStatus();
 
     // Closes the opened minidump file
     void Close();
 
-    BOOL CheckDbgHelpApiVersion();
+protected:
+	// Retrieves stack trace for specified thread ID
+	int StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset = 0, ULONG64 stackOffset = 0, ULONG64 instructionOffset = 0);
+
+	BOOL CheckDbgHelpApiVersion();
 
     int GetModuleRowIdByBaseAddr(DWORD64 dwBaseAddr);
     int GetModuleRowIdByAddress(DWORD64 dwAddress);
     int GetThreadRowIdByThreadId(ULONG32 dwThreadId);
 
     MdmpData m_DumpData; // Minidump data
+	friend class CMiniDumpReaderCallback;
 
     BOOL m_bLoaded;               // Is minidump loaded?
     BOOL m_bReadSysInfoStream;    // Was system info stream read?
@@ -187,7 +196,7 @@ private:
     CString m_sSymSearchPath; // The list of symbol search dirs passed.
     HANDLE m_hFileMiniDump; // Handle to opened .DMP file
     HANDLE m_hFileMapping;  // Handle to memory mapping object
-    LPVOID m_pMiniDumpStartPtr; // Pointer to the biginning of memory-mapped minidump  
+    LPVOID m_pMiniDumpStartPtr; // Pointer to the beginning of memory-mapped minidump  
 
 };
 

@@ -5,6 +5,9 @@
 
 #include "stdafx.h"
 #include "StackWalker.h"
+
+#include "MiniDumpReader.h"
+#include "PdbCache.h"
 #include "DumpStruct.h"
 #include "PeStruct.h"
 
@@ -35,7 +38,7 @@ CStackWalker::~CStackWalker()
     Destroy();
 }
 
-bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge, CLog* pLog)
+bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge)
 {
 	bool bResult = false;
 	m_sErrorMsg = L"Unspecified error.";
@@ -113,41 +116,6 @@ bool CStackWalker::Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD 
         }
     }
 
-	// initialize debug helper, if under win32
-#if WIN32_DBG_API == USE_DBGENG
-	static bool g_winFrameDumper_initilaized = false;
-	{
-		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
-		if (!g_winFrameDumper_initilaized) {
-			if (g_winFrameDumper.init(pLog) != S_OK) {
-				m_sErrorMsg = L"Failed to initialize debug dumper!";
-				return false;
-			}
-			g_winFrameDumper_initilaized = true;
-			if (pPdbCache) {
-				auto pdbs = pPdbCache->GetSearchDirs();
-				if (g_winFrameDumper.set_direcoties(pdbs.c_str()) != S_OK) {
-					m_sErrorMsg = L"Failed to load pdbs!";
-					return false;
-				}
-			}
-		}
-	}
-#elif WIN32_DBG_API == USE_DBGHLP
-	static bool g_winFrameDumper_initilaized = false;
-	{
-		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
-		if (!g_winFrameDumper_initilaized) 
-		{
-			g_winFrameDumper_initilaized = true;
-			if (pPdbCache) 
-			{
-				auto pdbs = pPdbCache->GetSearchDirs();
-				g_winFrameDumper.SetDirecoties(pdbs.c_str());
-			}
-		}
-	}
-#endif
     // Done
 	m_sErrorMsg = L"Success";
 	bResult = true;
@@ -178,47 +146,6 @@ CStackFrame* CStackWalker::GetStackFrame()
 
 BOOL CStackWalker::FirstStackFrame()
 {
-#if WIN32_DBG_API == USE_DBGENG
-	{
-		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
-		m_winStackFrames = g_winFrameDumper.dumpFrame(m_dwThreadId, 
-			m_pMdmpReader->GetFileName().c_str(), m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC
-		);
-	}
-#elif WIN32_DBG_API == USE_DBGHLP
-	{
-		m_winStackFrames.clear();
-
-		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
-		if (g_winFrameDumper.Open(m_pMdmpReader->GetFileName().c_str()) != 0)
-			return FALSE;
-		if (g_winFrameDumper.StackWalk(m_dwThreadId, m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC) != 0)
-			return FALSE;
-		int nThreadIndex = g_winFrameDumper.GetThreadRowIdByThreadId(m_dwThreadId);
-		if(nThreadIndex < 0 || nThreadIndex >= g_winFrameDumper.m_DumpData.m_Threads.size())
-			return FALSE;
-		for (const auto& frame : g_winFrameDumper.m_DumpData.m_Threads[nThreadIndex].m_StackTrace)
-		{
-			CStackFrame StackFrame;
-			StackFrame.m_dwAddrPC = frame.m_dwAddrPCOffset;
-			StackFrame.m_sSymbolName = CW2A(frame.m_sSymbolName);
-			CPdbSymbol::UndecorateSymbolName(StackFrame.m_sSymbolName, StackFrame.m_sUndecoratedSymbolName, true);
-			StackFrame.m_dwOffsInSymbol = frame.m_dw64OffsInSymbol;
-			StackFrame.m_sSrcFileName = frame.m_sSrcFileName;
-			StackFrame.m_nSrcLineNumber = frame.m_nSrcLineNumber;
-			StackFrame.m_dwOffsInLine = frame.m_dwOffsInLine;
-
-			if (frame.m_nModuleRowID >= 0 && frame.m_nModuleRowID < g_winFrameDumper.m_DumpData.m_Modules.size())
-			{
-				const auto& module = g_winFrameDumper.m_DumpData.m_Modules[frame.m_nModuleRowID];
-				StackFrame.m_sModuleName = module.m_sModuleName;;
-				StackFrame.m_dwOffsInModule = StackFrame.m_dwAddrPC - module.m_uBaseAddr;
-			}
-			m_winStackFrames.push_back(StackFrame);
-		}
-		g_winFrameDumper.Close();
-	}
-#endif
     return NextStackFrame(TRUE);
 }
 
@@ -226,30 +153,24 @@ BOOL CStackWalker::NextStackFrame(BOOL bFirstFrame)
 {
 #if WIN32_DBG_API == USE_DBGENG
 	if (bFirstFrame) m_winStackIdx = 0;
-	if (m_winStackIdx >= m_winStackFrames.size()) return false;
-	//m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
-	//m_StackFrame.m_sUndecoratedSymbolName = m_StackFrame.m_sSymbolName; // TODO
-	//m_StackFrame.m_dwOffsInSymbol = m_winStackFrames[m_winStackIdx].methodOffset; // TODO: check
-	//m_StackFrame.m_sPdbFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].moduleName); // TODO:
-	//m_StackFrame.m_sModuleName = strconv::a2w(m_winStackFrames[m_winStackIdx].moduleName);
-	//m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].srcFileName);
-	//m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset;
+	if (m_winStackIdx >= m_winStackFrames[m_dwThreadId].size()) return false;
 
-	m_StackFrame.m_dwAddrPC = m_winStackFrames[m_winStackIdx].instructionAddr;
-	m_StackFrame.m_dwAddrReturn = m_winStackFrames[m_winStackIdx].returnAddr;
-	GetSymbolInfoForCurStackFrame();
+	m_StackFrame.m_dwAddrPC = m_winStackFrames[m_dwThreadId][m_winStackIdx].instructionAddr;
+	m_StackFrame.m_dwAddrReturn = m_winStackFrames[m_dwThreadId][m_winStackIdx].returnAddr;
+	GetSymbolInfoForCurStackFrame();	// update m_sModuleName and m_dwOffsInModule from MiniDump
 	// update missing info
-	m_StackFrame.m_sSymbolName = m_winStackFrames[m_winStackIdx].methodName;
-	m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_winStackIdx].srcFileName); // TODO:
-	m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_winStackIdx].srcLineOffset;
+	m_StackFrame.m_sSymbolName = m_winStackFrames[m_dwThreadId][m_winStackIdx].methodName;
+	m_StackFrame.m_sSrcFileName = strconv::a2w(m_winStackFrames[m_dwThreadId][m_winStackIdx].srcFileName); // TODO:
+	m_StackFrame.m_nSrcLineNumber = m_winStackFrames[m_dwThreadId][m_winStackIdx].srcLineOffset;
 	m_winStackIdx++;
 	return true;
 #elif WIN32_DBG_API == USE_DBGHLP
 	if (bFirstFrame) 
 		m_winStackIdx = 0;
-	if (m_winStackIdx >= m_winStackFrames.size()) 
+	if (m_winStackIdx >= m_winStackFrames[m_dwThreadId].size())
 		return false;
-	m_StackFrame = m_winStackFrames[m_winStackIdx];
+	m_StackFrame = m_winStackFrames[m_dwThreadId][m_winStackIdx];
+	CPdbSymbol::UndecorateSymbolName(m_StackFrame.m_sSymbolName, m_StackFrame.m_sUndecoratedSymbolName, true);
 	m_winStackIdx++;
 	return true;
 #endif
@@ -917,6 +838,112 @@ BOOL CStackWalker::CheckAMD64Epilog(LPBYTE uchProgram, UINT cbProgram, CStackFra
 std::wstring CStackWalker::GetErrorMsg()
 {
     return m_sErrorMsg;
+}
+
+bool CStackWalker::DumpAll(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, CLog* pLog, bool bExactMatchBuildAge)
+{
+#if WIN32_DBG_API == USE_DBGENG
+	{
+		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
+
+		if (g_winFrameDumper.init(pLog) != S_OK)
+		{
+			m_sErrorMsg = L"Failed to initialize debug dumper!";
+			return false;
+		}
+
+		if (pPdbCache)
+		{
+			auto pdbs = pPdbCache->GetSearchDirs();
+			if (g_winFrameDumper.set_direcoties(pdbs.c_str()) != S_OK)
+			{
+				m_sErrorMsg = L"Failed to load pdbs!";
+				return false;
+			}
+		}
+
+		if (pMiniDump)
+		{
+			// Open minidump
+			if (!g_winFrameDumper.open(pMiniDump->GetFileName().c_str()))
+				return false;
+
+			// Walk through minidump threads
+			for (int i = 0; i < pMiniDump->GetThreadCount(); i++)
+			{
+				MiniDumpThreadInfo* pThread = pMiniDump->GetThreadInfo(i);
+				if (!pThread)
+					break;
+
+				// update frameOffset, stackOffset and instructionOffset for this thread
+				if (!Init(pMiniDump, pPdbCache, pThread->m_uThreadId, bExactMatchBuildAge))
+					break;
+
+				// dump stack frames
+				m_winStackFrames[m_dwThreadId] = g_winFrameDumper.dumpFrame(m_dwThreadId, m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC);
+			}
+
+			// Walk through minidump modules
+			m_winModuleSymbols = g_winFrameDumper.dumpModuleSymbolStatus();
+
+			// Close minidump
+			g_winFrameDumper.close();
+		}
+	}
+#elif WIN32_DBG_API == USE_DBGHLP
+	{
+		std::lock_guard<std::mutex> guard(g_winFrameDumperMutex);
+
+		if (pPdbCache)
+		{
+			auto pdbs = pPdbCache->GetSearchDirs();
+			g_winFrameDumper.SetDirecoties(pdbs.c_str());
+		}
+
+		if (pMiniDump)
+		{
+			// Open minidump
+			if (g_winFrameDumper.Open(pMiniDump->GetFileName().c_str()) != 0)
+				return false;
+
+			// Walk through minidump threads
+			for (int i = 0; i < pMiniDump->GetThreadCount(); i++)
+			{
+				MiniDumpThreadInfo* pThread = pMiniDump->GetThreadInfo(i);
+				if (!pThread)
+					break;
+
+				// update frameOffset, stackOffset and instructionOffset for this thread
+				if (!Init(pMiniDump, pPdbCache, pThread->m_uThreadId, bExactMatchBuildAge))
+					break;
+
+				// dump stack frames
+				g_winFrameDumper.DumpFrame(m_dwThreadId, m_StackFrame.m_dwAddrFrame, m_StackFrame.m_dwAddrStack, m_StackFrame.m_dwAddrPC, m_winStackFrames[m_dwThreadId]);
+			}
+
+			// Walk through minidump modules
+			m_winModuleSymbols = g_winFrameDumper.DumpModuleSymbolStatus();
+
+			// Close minidump
+			g_winFrameDumper.Close();
+		}
+	}
+#endif
+
+	return true;
+}
+
+bool CStackWalker::IsSymbolLoadedForModule(std::string sFileName) const
+{
+#if WIN32_DBG_API == USE_DBGENG || WIN32_DBG_API == USE_DBGHLP
+	auto iter = m_winModuleSymbols.find(sFileName);
+	if (iter == m_winModuleSymbols.end())
+		return false;
+
+	return iter->second;
+#else
+	return false;
+#endif
 }
 
 bool CStackWalker::GetSymbolInfoForCurStackFrame()

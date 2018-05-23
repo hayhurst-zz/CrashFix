@@ -191,6 +191,14 @@ class m120515_122132_initial extends CDbMigration
 					'position'=>1,
 				));
 		
+		$this->insert('{{lookup}}', 	
+				array(
+					'name'=>'Symbols loaded from MS server.',
+					'type'=>'SymLoadStatus',
+					'code'=>2,
+					'position'=>2,
+				));
+
 		// Insert bug statuses
 		
 		$this->insert('{{lookup}}', 	

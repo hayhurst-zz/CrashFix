@@ -4,17 +4,23 @@
 //! \date 2011
 
 #pragma once
-#include "MiniDumpReader.h"
-#include "PdbCache.h"
 
 #define USE_NATIVE 111
 #define USE_DBGHLP 222
 #define USE_DBGENG 333
+
+//#define WIN32_DBG_API USE_NATIVE
+//#define WIN32_DBG_API USE_DBGHLP
 #define WIN32_DBG_API USE_DBGENG
 
 #if WIN32_DBG_API == USE_DBGENG
 #include "StackFrame.h"
 #endif
+
+class CMiniDumpReader;
+class CPdbCache;
+class CPeReader;
+class CLog;
 
 //! \class CStackFrame
 //! \brief Stack frame.
@@ -78,7 +84,7 @@ public:
     //! @param[in] pPdbCache PDB symbol cache
     //! @param[in] dwThreadId Thread ID
 	//! @param[in] bExactMatchBuildAge If to require build age match.
-    bool Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge = TRUE, CLog* pLog = nullptr);
+    bool Init(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, DWORD dwThreadId, bool bExactMatchBuildAge = TRUE);
 
 	//! Frees all used resources.
 	void Destroy();
@@ -94,6 +100,12 @@ public:
 
     //! Returns last error message
     std::wstring GetErrorMsg();
+
+	//! Dump stack frames of all threads and symbol status of all modules
+	bool DumpAll(CMiniDumpReader* pMiniDump, CPdbCache* pPdbCache, CLog* pLog, bool bExactMatchBuildAge);
+
+	//! Returns whether the symbols loaded for module
+	bool IsSymbolLoadedForModule(std::string sFileName) const;
 
 private:
 
@@ -126,10 +138,12 @@ private:
 	DWORD m_dwThreadId = 0;
 
 #if WIN32_DBG_API == USE_DBGENG
-	std::vector<StackFrameItem> m_winStackFrames;
+	std::map<DWORD, std::vector<StackFrameItem>> m_winStackFrames;	// thread_id -> stack_frames
+	std::map<std::string, bool> m_winModuleSymbols;					// module_name -> symbol_loaded
 	std::size_t m_winStackIdx = 0;
 #elif WIN32_DBG_API == USE_DBGHLP
-	std::vector<CStackFrame> m_winStackFrames;
+	std::map<DWORD, std::vector<CStackFrame>> m_winStackFrames;		// thread_id -> stack_frames
+	std::map<std::string, bool> m_winModuleSymbols;					// module_name -> symbol_loaded
 	std::size_t m_winStackIdx = 0;
 #endif
 

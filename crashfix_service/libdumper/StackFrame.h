@@ -35,21 +35,11 @@ public:
 
 	std::vector<StackFrameItem> build(DWORD dwThreadId);
 
-	void clear() {
-		buffer.clear();
-		buffer.str(std::string()); // TODO
-	}
+	void clear();
 
-	bool setFrames(DEBUG_STACK_FRAME_EX* ptr, std::size_t count) {
-		pFrames = ptr;
-		frameCount = count;
-		return true;
-	}
+	bool setFrames(DEBUG_STACK_FRAME_EX* ptr, std::size_t count);
 
-	void setLogger(CLog* pLog)
-	{
-		m_pLog = pLog;
-	}
+	void setLogger(CLog* pLog);
 
 private:
 	std::stringstream buffer;
@@ -58,7 +48,9 @@ private:
 	CLog* m_pLog = nullptr;
 };
 
-class StackFrameDumper {
+class StackFrameDumper 
+{
+	bool m_initilaized = false;
 	IDebugClient4* client;
 	IDebugControl5* control;
 	IDebugSymbols3* symbols;
@@ -68,47 +60,18 @@ public:
 	StackFrameDumper() :client(nullptr), control(nullptr), symbols(nullptr) {}
 	StackFrameDumper(const StackFrameDumper&) = delete;
 
-	~StackFrameDumper() 
-	{
-		if (client) client->Release();
-		if (control) control->Release();
-		if (symbols) symbols->Release();
-	}
+	~StackFrameDumper();
 
 	HRESULT init(CLog* pLog);
 
-	HRESULT set_direcoties(const char* symbol_dirs, const char* image_dirs = nullptr) 
-	{
-		HRESULT status = S_OK;
-		if (symbol_dirs) {
-			status = symbols->SetSymbolPath(symbol_dirs);
-			//auto symbolStoreEnvName = "_NT_SYMBOL_PATH";
-			//auto symbolStoreSize = GetEnvironmentVariableA(symbolStoreEnvName, nullptr, 0);
-			//if (symbolStoreSize != 0) {
-			//	auto store = new char[symbolStoreSize]();
-			//	if (GetEnvironmentVariableA(symbolStoreEnvName, store, symbolStoreSize) != 0) {
-			//		status = symbols->AppendSymbolPath(store);
-			//	}
-			//	delete[] store;
-			//}
-			if (status != S_OK) return status;
-			status = symbols->SetImagePath(symbol_dirs);
-			if (status != S_OK) return status;
-		}
+	HRESULT set_direcoties(const char* symbol_dirs, const char* image_dirs = nullptr);
 
-		if (image_dirs) {
-			status = symbols->SetImagePath(image_dirs);
-			if (status != S_OK) return status;
-		}
+	bool open(const char* dumpFileName);
 
-		// status = control->WaitForEvent(DEBUG_WAIT_DEFAULT, INFINITE);
-		
-		return status;
-	}
+	void close();
+	
+	std::vector<StackFrameItem> dumpFrame(DWORD dwThreadId, ULONG64 frameOffset = 0, ULONG64 stackOffset = 0, ULONG64 instructionOffset = 0);
 
-	std::vector<StackFrameItem> dumpFrame(DWORD dwThreadId,
-		const char* dumpFileName, ULONG64 frameOffset = 0,
-		ULONG64 stackOffset = 0, ULONG64 instructionOffset = 0
-	);
+	std::map<std::string, bool> dumpModuleSymbolStatus();
 };
 

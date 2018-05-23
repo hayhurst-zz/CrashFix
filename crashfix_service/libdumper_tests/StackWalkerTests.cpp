@@ -7,6 +7,7 @@
 #include "FileFinder.h"
 #include "CrashReportReader.h"
 #include "strconv.h"
+#include "PdbCache.h"
 
 class StackWalkerTests : public CTestCase
 {

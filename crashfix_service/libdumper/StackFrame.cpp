@@ -4,110 +4,6 @@
 
 #pragma comment(lib, "dbgeng.lib")
 
-STDMETHODIMP StackFrameDumperCallback::QueryInterface(THIS_ _In_ REFIID InterfaceId, _Out_ PVOID* Interface)
-{
-	*Interface = nullptr;
-	if (IsEqualIID(InterfaceId, __uuidof(IUnknown)) ||
-		IsEqualIID(InterfaceId, __uuidof(IDebugOutputCallbacks))
-		) {
-		*Interface = (IDebugOutputCallbacks *)this;
-		AddRef();
-		return S_OK;
-	}
-	else {
-		return E_NOINTERFACE;
-	}
-}
-
-STDMETHODIMP StackFrameDumperCallback::Output(THIS_ _In_ ULONG Mask, _In_ PCSTR Text)
-{
-	UNREFERENCED_PARAMETER(Mask); // TODO
-	buffer << Text;
-	// std::cout << Text;
-	buffer.flush(); // TODO
-	return S_OK;
-}
-
-STDMETHODIMP_(ULONG) StackFrameDumperCallback::Release(THIS) {
-	return 0;
-}
-
-STDMETHODIMP_(ULONG) StackFrameDumperCallback::AddRef(THIS) {
-	return 1;
-}
-
-HRESULT StackFrameDumper::init(CLog* pLog)
-{
-	HRESULT status = S_OK;
-	status = DebugCreate(__uuidof(IDebugClient4), (void**)&client);
-	if (status != S_OK) return status;
-
-	status = client->QueryInterface(__uuidof(IDebugControl5), (void**)&control);
-	if (status != S_OK) return status;
-
-	status = client->QueryInterface(__uuidof(IDebugSymbols3), (void**)&symbols);
-	if (status != S_OK) return status;
-
-	status = symbols->SetSymbolOptions(0x30237); // flag used by WinDbg
-	if (status != S_OK) return status;
-
-	status = client->SetOutputCallbacks(&callback);
-	if (status != S_OK) return status;
-
-	callback.setLogger(pLog);
-
-	return status;
-}
-
-std::vector<StackFrameItem> StackFrameDumper::dumpFrame(DWORD dwThreadId, const char* dumpFileName, ULONG64 frameOffset /*= 0*/, ULONG64 stackOffset /*= 0*/, ULONG64 instructionOffset /*= 0 */)
-{
-	if (client->OpenDumpFile(dumpFileName) == S_OK) {
-		if (control->WaitForEvent(DEBUG_WAIT_DEFAULT, INFINITE) == S_OK) {
-			if (symbols->SetScopeFromStoredEvent() == S_OK) {
-				ULONG filled;
-				static constexpr ULONG FrameBufSize = 64;
-				DEBUG_STACK_FRAME_EX frames[FrameBufSize];
-				if (control->GetStackTraceEx(frameOffset, stackOffset, instructionOffset, frames, FrameBufSize, &filled) == S_OK &&
-					callback.setFrames(frames, filled) &&
-					control->OutputStackTraceEx(
-						DEBUG_OUTCTL_ALL_CLIENTS, frames, filled,
-						DEBUG_STACK_SOURCE_LINE | DEBUG_STACK_FRAME_ADDRESSES | DEBUG_STACK_FRAME_NUMBERS
-					) == S_OK &&
-					client->FlushCallbacks() == S_OK) {
-					client->EndSession(DEBUG_END_ACTIVE_TERMINATE);
-					//for (auto i = 0; i < filled; ++i) {
-					//	std::cout << frames[i].FrameNumber << ": " << frames[i].InstructionOffset << std::endl;
-					//}
-					return callback.build(dwThreadId);
-				}
-			}
-		}
-	}
-	client->EndSession(DEBUG_END_ACTIVE_TERMINATE);
-	callback.clear();
-	return{};
-}
-
-std::vector<StackFrameItem> StackFrameDumperCallback::build(DWORD dwThreadId)
-{
-	std::string content = buffer.str();
-	if(m_pLog)
-		m_pLog->write(1, "Dump stack frames for thread 0x%x:\n%s\n", dwThreadId, content.c_str());
-	
-	std::string line;
-	StackFrameItem item;
-	std::vector<StackFrameItem> ret;
-	while (std::getline(buffer, line)) {
-		if (item.from_dbg_string(line)) {
-			item.instructionAddr = pFrames[item.frameNumber].InstructionOffset;
-			ret.push_back(item);
-		}
-		// TODO: else?
-	}
-	clear();
-	return ret;
-}
-
 bool StackFrameItem::from_dbg_string(const std::string& raw)
 {
 	moduleName.clear();
@@ -250,4 +146,240 @@ bool StackFrameItem::from_dbg_string(const std::string& raw)
 	}
 
 	return false;
+}
+
+///////////////////////////////////////////////////////////
+
+STDMETHODIMP StackFrameDumperCallback::QueryInterface(THIS_ _In_ REFIID InterfaceId, _Out_ PVOID* Interface)
+{
+	*Interface = nullptr;
+	if (IsEqualIID(InterfaceId, __uuidof(IUnknown)) ||
+		IsEqualIID(InterfaceId, __uuidof(IDebugOutputCallbacks))
+		) {
+		*Interface = (IDebugOutputCallbacks *)this;
+		AddRef();
+		return S_OK;
+	}
+	else {
+		return E_NOINTERFACE;
+	}
+}
+
+STDMETHODIMP StackFrameDumperCallback::Output(THIS_ _In_ ULONG Mask, _In_ PCSTR Text)
+{
+	UNREFERENCED_PARAMETER(Mask); // TODO
+	buffer << Text;
+	// std::cout << Text;
+	buffer.flush(); // TODO
+	return S_OK;
+}
+
+STDMETHODIMP_(ULONG) StackFrameDumperCallback::Release(THIS) {
+	return 0;
+}
+
+STDMETHODIMP_(ULONG) StackFrameDumperCallback::AddRef(THIS) {
+	return 1;
+}
+
+std::vector<StackFrameItem> StackFrameDumperCallback::build(DWORD dwThreadId)
+{
+	std::string content = buffer.str();
+	if(m_pLog)
+		m_pLog->write(1, "Dump stack frames for thread 0x%x:\n%s\n", dwThreadId, content.c_str());
+	
+	std::string line;
+	StackFrameItem item;
+	std::vector<StackFrameItem> ret;
+	while (std::getline(buffer, line)) {
+		if (item.from_dbg_string(line)) {
+			item.instructionAddr = pFrames[item.frameNumber].InstructionOffset;
+			ret.push_back(item);
+		}
+		// TODO: else?
+	}
+	clear();
+	return ret;
+}
+
+void StackFrameDumperCallback::clear()
+{
+	buffer.clear();
+	buffer.str(std::string()); // TODO
+}
+
+bool StackFrameDumperCallback::setFrames(DEBUG_STACK_FRAME_EX* ptr, std::size_t count)
+{
+	pFrames = ptr;
+	frameCount = count;
+	return true;
+}
+
+void StackFrameDumperCallback::setLogger(CLog* pLog)
+{
+	m_pLog = pLog;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+StackFrameDumper::~StackFrameDumper()
+{
+	if (client) client->Release();
+	if (control) control->Release();
+	if (symbols) symbols->Release();
+}
+
+HRESULT StackFrameDumper::init(CLog* pLog)
+{
+	if (m_initilaized)
+		return S_OK;
+
+	HRESULT status = S_OK;
+	status = DebugCreate(__uuidof(IDebugClient4), (void**)&client);
+	if (status != S_OK) return status;
+
+	status = client->QueryInterface(__uuidof(IDebugControl5), (void**)&control);
+	if (status != S_OK) return status;
+
+	status = client->QueryInterface(__uuidof(IDebugSymbols3), (void**)&symbols);
+	if (status != S_OK) return status;
+
+	status = symbols->SetSymbolOptions(0x30237); // flag used by WinDbg
+	if (status != S_OK) return status;
+
+	status = client->SetOutputCallbacks(&callback);
+	if (status != S_OK) return status;
+
+	m_initilaized = true;
+
+	callback.setLogger(pLog);
+
+	return status;
+}
+
+HRESULT StackFrameDumper::set_direcoties(const char* symbol_dirs, const char* image_dirs)
+{
+	HRESULT status = S_OK;
+	if (symbol_dirs) 
+	{
+		status = symbols->SetSymbolPath(symbol_dirs);
+		//auto symbolStoreEnvName = "_NT_SYMBOL_PATH";
+		//auto symbolStoreSize = GetEnvironmentVariableA(symbolStoreEnvName, nullptr, 0);
+		//if (symbolStoreSize != 0) {
+		//	auto store = new char[symbolStoreSize]();
+		//	if (GetEnvironmentVariableA(symbolStoreEnvName, store, symbolStoreSize) != 0) {
+		//		status = symbols->AppendSymbolPath(store);
+		//	}
+		//	delete[] store;
+		//}
+		if (status != S_OK) return status;
+		status = symbols->SetImagePath(symbol_dirs);
+		if (status != S_OK) return status;
+	}
+
+	if (image_dirs) 
+	{
+		status = symbols->SetImagePath(image_dirs);
+		if (status != S_OK) return status;
+	}
+
+	// status = control->WaitForEvent(DEBUG_WAIT_DEFAULT, INFINITE);
+
+	return status;
+}
+
+bool StackFrameDumper::open(const char* dumpFileName)
+{
+	if (FAILED(client->OpenDumpFile(dumpFileName)))
+		return false;
+
+	if (FAILED(control->WaitForEvent(DEBUG_WAIT_DEFAULT, INFINITE)))
+		return false;
+
+	if (FAILED(symbols->SetScopeFromStoredEvent()))
+		return false;
+
+	return true;
+}
+
+void StackFrameDumper::close()
+{
+	client->EndSession(DEBUG_END_ACTIVE_TERMINATE);
+}
+
+std::vector<StackFrameItem> StackFrameDumper::dumpFrame(DWORD dwThreadId, ULONG64 frameOffset /*= 0*/, ULONG64 stackOffset /*= 0*/, ULONG64 instructionOffset /*= 0 */)
+{
+	ULONG filled;
+	static constexpr ULONG FrameBufSize = 64;
+	DEBUG_STACK_FRAME_EX frames[FrameBufSize];
+
+	do 
+	{
+		callback.clear();
+
+		HRESULT hr = control->GetStackTraceEx(frameOffset, stackOffset, instructionOffset, frames, FrameBufSize, &filled);
+		if (FAILED(hr))
+			break;
+		
+		if (!callback.setFrames(frames, filled))
+			break;
+
+		hr = control->OutputStackTraceEx(
+			DEBUG_OUTCTL_ALL_CLIENTS, frames, filled,
+			DEBUG_STACK_SOURCE_LINE | DEBUG_STACK_FRAME_ADDRESSES | DEBUG_STACK_FRAME_NUMBERS
+		);
+		if (FAILED(hr))
+			break;
+		
+		hr = client->FlushCallbacks();
+		if (FAILED(hr))
+			break;
+
+		return callback.build(dwThreadId);
+	} while (false);
+
+	return{};
+}
+
+std::map<std::string, bool> StackFrameDumper::dumpModuleSymbolStatus()
+{
+	std::map<std::string, bool> result;
+	DEBUG_MODULE_PARAMETERS* Module_Params = nullptr;
+
+	do 
+	{
+		HRESULT hr = S_OK;
+		
+		ULONG Loaded = 0;
+		ULONG Unloaded = 0;
+		hr = symbols->GetNumberModules(&Loaded, &Unloaded);
+		if (FAILED(hr))
+			break;
+
+		Module_Params = new DEBUG_MODULE_PARAMETERS[Loaded];
+		hr = symbols->GetModuleParameters(Loaded, nullptr, 0, Module_Params);
+		if (FAILED(hr))
+			break;
+
+		char buf[MAX_PATH] = { 0 };
+		ULONG NameSize = 0;
+		for (ULONG i = 0; i < Loaded; i++)
+		{
+			hr = symbols->GetModuleNameString(DEBUG_MODNAME_IMAGE, i, 0, buf, MAX_PATH, &NameSize);
+			if (FAILED(hr))
+				continue;
+
+			std::string modname = buf;
+			size_t pos = modname.rfind('\\');
+			if (pos != modname.npos)
+				modname = modname.substr(pos + 1);
+
+			result[modname] = Module_Params[i].SymbolType == DEBUG_SYMTYPE_PDB;
+		}
+
+	} while (false);
+
+	delete[] Module_Params;
+
+	return result;
 }

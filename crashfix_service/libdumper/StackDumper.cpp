@@ -14,6 +14,7 @@ be found in the Authors.txt file in the root of the source tree.
 #include <assert.h>
 #include "strconv.h"
 #include "md5.h"
+#include "StackWalker.h"
 
 #pragma comment( lib, "dbghelp.lib" )
 
@@ -23,27 +24,31 @@ CMiniDumpReader* g_pMiniDumpReader = NULL;
 
 // Callback function prototypes
 
-BOOL CALLBACK ReadProcessMemoryProc64(
+class CMiniDumpReaderCallback
+{
+public:
+static BOOL CALLBACK ReadProcessMemoryProc64(
                                       HANDLE hProcess,
                                       DWORD64 lpBaseAddress,
                                       PVOID lpBuffer,
                                       DWORD nSize,
                                       LPDWORD lpNumberOfBytesRead);
 
-PVOID CALLBACK FunctionTableAccessProc64(
+static PVOID CALLBACK FunctionTableAccessProc64(
     HANDLE hProcess,
     DWORD64 AddrBase);
 
-DWORD64 CALLBACK GetModuleBaseProc64(
+static DWORD64 CALLBACK GetModuleBaseProc64(
                                      HANDLE hProcess,
                                      DWORD64 Address);
 
-BOOL CALLBACK SymRegisterCallbackProc64(
+static BOOL CALLBACK SymRegisterCallbackProc64(
                                         HANDLE hProcess,
                                         ULONG ActionCode,
                                         ULONG64 CallbackData,
                                         ULONG64 UserContext
                                         );
+};
 
 CMiniDumpReader::CMiniDumpReader()
 {
@@ -61,6 +66,50 @@ CMiniDumpReader::CMiniDumpReader()
 CMiniDumpReader::~CMiniDumpReader()
 {
     Close();
+}
+
+bool CMiniDumpReader::DumpFrame(ULONG32 dwThreadId, ULONG64 frameOffset, ULONG64 stackOffset, ULONG64 instructionOffset, std::vector<CStackFrame>& stackFrames)
+{
+	stackFrames.clear();
+
+	if (StackWalk(dwThreadId, frameOffset, stackOffset, instructionOffset) != 0)
+		return false;
+	int nThreadIndex = GetThreadRowIdByThreadId(dwThreadId);
+	if (nThreadIndex < 0 || nThreadIndex >= m_DumpData.m_Threads.size())
+		return false;
+	for (const auto& frame : m_DumpData.m_Threads[nThreadIndex].m_StackTrace)
+	{
+		CStackFrame StackFrame;
+		StackFrame.m_dwAddrPC = frame.m_dwAddrPCOffset;
+		StackFrame.m_sSymbolName = CW2A(frame.m_sSymbolName);
+		StackFrame.m_dwOffsInSymbol = frame.m_dw64OffsInSymbol;
+		StackFrame.m_sSrcFileName = frame.m_sSrcFileName;
+		StackFrame.m_nSrcLineNumber = frame.m_nSrcLineNumber;
+		StackFrame.m_dwOffsInLine = frame.m_dwOffsInLine;
+
+		if (frame.m_nModuleRowID >= 0 && frame.m_nModuleRowID < m_DumpData.m_Modules.size())
+		{
+			const auto& module = m_DumpData.m_Modules[frame.m_nModuleRowID];
+			StackFrame.m_sModuleName = module.m_sModuleName;;
+			StackFrame.m_dwOffsInModule = StackFrame.m_dwAddrPC - module.m_uBaseAddr;
+		}
+		stackFrames.push_back(StackFrame);
+	}
+
+	return true;
+}
+
+std::map<std::string, bool> CMiniDumpReader::DumpModuleSymbolStatus()
+{
+	std::map<std::string, bool> result;
+
+	for (const auto& module : m_DumpData.m_Modules)
+	{
+		std::string modname = CW2A(module.m_sModuleName);
+		result[modname] = !module.m_bNoSymbolInfo;
+	}
+
+	return result;
 }
 
 void CMiniDumpReader::SetDirecoties(CString sSymSearchPath)
@@ -158,7 +207,7 @@ int CMiniDumpReader::Open(CString sFileName)
     return 0;
 }
 
-//BOOL CALLBACK SymRegisterCallbackProc64(
+//BOOL CALLBACK CMiniDumpReaderCallback::SymRegisterCallbackProc64(
 //  HANDLE hProcess,
 //  ULONG ActionCode,
 //  ULONG64 CallbackData,
@@ -636,9 +685,9 @@ int CMiniDumpReader::StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset,	ULONG64 
 	int s = sizeof(CONTEXT);
     memcpy(pContext, pThreadContext, uThreadContextSize);
 
-    g_pMiniDumpReader = this;
+	g_pMiniDumpReader = this;
 
-    // Init stack frame with correct initial values
+	// Init stack frame with correct initial values
     // See this:
     // http://www.codeproject.com/KB/threads/StackWalker.aspx
     //
@@ -668,6 +717,8 @@ int CMiniDumpReader::StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset,	ULONG64 
 	  sf.AddrPC.Offset = pThreadContext->Eip;
       sf.AddrStack.Offset = pThreadContext->Esp;
       sf.AddrFrame.Offset = pThreadContext->Ebp;
+#else
+	  return 1; // x86 minidump unsupported by x64 dbghelp.dll
 #endif
 	  break;
   case PROCESSOR_ARCHITECTURE_AMD64:
@@ -676,6 +727,8 @@ int CMiniDumpReader::StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset,	ULONG64 
 	  sf.AddrPC.Offset = pThreadContext->Rip;
       sf.AddrStack.Offset = pThreadContext->Rsp;
       sf.AddrFrame.Offset = pThreadContext->Rbp;
+#else
+	  return 1; // x64 minidump unsupported by x86 dbghelp.dll
 #endif
 	  break;
   case PROCESSOR_ARCHITECTURE_IA64:
@@ -685,6 +738,8 @@ int CMiniDumpReader::StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset,	ULONG64 
       sf.AddrStack.Offset = pThreadContext->IntSp;
       sf.AddrFrame.Offset = pThreadContext->RsBSP;    
       sf.AddrBStore.Offset = pThreadContext->RsBSP;
+#else
+	  return 1; // Unsupported architecture
 #endif 
 	  break;
   default:
@@ -709,9 +764,9 @@ int CMiniDumpReader::StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset,	ULONG64 
             (HANDLE)dwThreadId,          // thread ID
             &sf,                         // stack frame
             dwMachineType==IMAGE_FILE_MACHINE_I386?NULL:(pContext), // used for non-I386 machines 
-            ReadProcessMemoryProc64,     // our routine
-            FunctionTableAccessProc64,   // our routine
-            GetModuleBaseProc64,         // our routine
+			&CMiniDumpReaderCallback::ReadProcessMemoryProc64,     // our routine
+			&CMiniDumpReaderCallback::FunctionTableAccessProc64,   // our routine
+			&CMiniDumpReaderCallback::GetModuleBaseProc64,         // our routine
             NULL                         // safe to be NULL
             );
 
@@ -852,7 +907,7 @@ int CMiniDumpReader::StackWalk(ULONG32 dwThreadId, ULONG64 frameOffset,	ULONG64 
 
 // This callback function is used by StackWalk64. It provides access to 
 // ranges of memory stored in minidump file
-BOOL CALLBACK ReadProcessMemoryProc64(
+BOOL CALLBACK CMiniDumpReaderCallback::ReadProcessMemoryProc64(
                                       HANDLE hProcess,
                                       DWORD64 lpBaseAddress,
                                       PVOID lpBuffer,
@@ -902,7 +957,7 @@ BOOL CALLBACK ReadProcessMemoryProc64(
 
 // This callback function is used by StackWalk64. It provides access to 
 // function table stored in minidump file
-PVOID CALLBACK FunctionTableAccessProc64(
+PVOID CALLBACK CMiniDumpReaderCallback::FunctionTableAccessProc64(
     HANDLE hProcess,
     DWORD64 AddrBase)
 {   
@@ -911,7 +966,7 @@ PVOID CALLBACK FunctionTableAccessProc64(
 
 // This callback function is used by StackWalk64. It provides access to 
 // module list stored in minidump file
-DWORD64 CALLBACK GetModuleBaseProc64(
+DWORD64 CALLBACK CMiniDumpReaderCallback::GetModuleBaseProc64(
                                      HANDLE hProcess,
                                      DWORD64 Address)
 {  

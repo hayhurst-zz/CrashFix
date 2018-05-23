@@ -2,6 +2,7 @@
 #include "CommandProcessor.h"
 #include "MiniDumpReader.h"
 #include "MiniDumpWriter.h"
+#include "PdbCache.h"
 #include "DbgHelpDumpWriter.h"
 #include "MsfFile.h"
 #include "PdbReader.h"
@@ -1189,6 +1190,10 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 
 	if(pMiniDump)
 	{
+		CStackWalker StackWalker;
+		StackWalker.DumpAll(pMiniDump, m_pPdbCache, m_pLog, bExactMatchBuildAge);
+
+		// Walk through minidump threads
 		for(i=0; i<pMiniDump->GetThreadCount(); i++)
 		{
 			MiniDumpThreadInfo* pThread = pMiniDump->GetThreadInfo(i);
@@ -1215,8 +1220,7 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 
 			BOOL bUnwindNotAvail = FALSE;
 
-			CStackWalker StackWalker;
-			bool bInit = StackWalker.Init(pMiniDump, m_pPdbCache, pThread->m_uThreadId, bExactMatchBuildAge, m_pLog);
+			bool bInit = StackWalker.Init(pMiniDump, m_pPdbCache, pThread->m_uThreadId, bExactMatchBuildAge);
 			if(bInit)
 			{
 				sStackTrace.clear();
@@ -1365,7 +1369,7 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 			doc.BeginTableRow();
 			doc.PutTableCell(2, false, "%d", i+1);
 			doc.PutTableCell(32, false, "%s",  strconv::w2a(pmi->m_sShortModuleName).c_str());
-			doc.PutTableCell(32, false, "%s",  pPdbReader!=NULL?"1":"0");
+			doc.PutTableCell(32, false, "%s",  pPdbReader!=NULL? "1": StackWalker.IsSymbolLoadedForModule(strconv::w2a(pmi->m_sShortModuleName)) ? "2" : "0");
 			doc.PutTableCell(48, false, "%s",  pPdbReader!=NULL?strconv::w2utf8(pPdbReader->GetFileName()).c_str():"");
 			doc.PutTableCell(48, false, "%s",  pPdbReader!=NULL?strconv::w2utf8(sPdbGUIDnAge).c_str():"");
 			doc.PutTableCell(48, false, "%s",  strconv::w2utf8(pmi->m_sVersion).c_str());
