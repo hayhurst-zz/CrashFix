@@ -175,6 +175,16 @@
               'name'=>'description',
               'value'=>'MiscHelpers::addEllipsis($data->description, 60)',
           ),  
+		  array(            
+			'name'=>'bugs',
+			'value'=>'(empty($data->bugs) ? "" : count($data->bugs))',
+		),  
+		array(            
+			  'name'=>'stack trace',
+			  'type' => 'raw',
+			  'value'=> '($data->getMainThread() ? CHtml::link(CHtml::encode(\'Main\'), array(\'crashReport/view\', \'id\'=>$data->id, \'tab\'=>\'Threads\', \'thread\'=>$data->getMainThread()->id)) : "") ." ".
+			  ($data->getExceptionThread() ? CHtml::link(CHtml::encode(\'Exception\'), array(\'crashReport/view\', \'id\'=>$data->id, \'tab\'=>\'Threads\', \'thread\'=>$data->getExceptionThread()->id)) : "")',
+          ),  
       ),
  )); 
   
