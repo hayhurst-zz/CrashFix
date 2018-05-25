@@ -534,7 +534,7 @@ class CrashReport extends CActiveRecord
 		return true;
 		
 	}
-	
+
 	/**
 	 * Returns crash group title for this crash report.
      * @param string $md5 On output, returns MD5 hash for exception stack trace.
@@ -599,10 +599,24 @@ class CrashReport extends CActiveRecord
                 if($exceptionThread!=null && isset($exceptionThread->stack_trace_md5))
                 {
                     // Use the topmost stack frame as title
-                    $title = $exceptionThread->getExceptionStackFrameTitle();
-                    Yii::log('Exception stack frame title = '.$title, 'info');
+					$title = $exceptionThread->getExceptionStackFrameTitle();
                     if(strlen($title)!=0)
                         $hash = $exceptionThread->stack_trace_md5;
+
+					// use main thread stack frame as title if DeadLoopDectector matched
+					if(strpos($title, 'DeadLoopDectector') !== FALSE)
+					{
+						$main_thread = $this->getMainThread();
+						if($main_thread!=null && isset($main_thread->stack_trace_md5))
+						{
+							// Use the topmost stack frame as title
+							$title = "[DeadLoop] " . $main_thread->getExceptionStackFrameTitle();
+							if(strlen($title)!=0)
+								$hash = md5($hash . $main_thread->stack_trace_md5);
+						}
+					}
+							
+                    Yii::log('Exception stack frame title = '.$title, 'info');
                 }		               		
             }
             
@@ -641,7 +655,7 @@ class CrashReport extends CActiveRecord
 
 		return $title;
 	}
-    
+	
     /**
      * Looks for exception thread model for this crash report. 
      */
@@ -661,6 +675,35 @@ class CrashReport extends CActiveRecord
         return $exceptionThread;
     }
 	
+    /**
+     * Looks for main thread model for this crash report. 
+     */
+    public function getMainThread()
+    {
+        // Find exception thread
+		$mainThread = null;
+
+		$id_list = array();
+        foreach($this->threads as $thread)
+        {
+			$id_list[] = $thread->id;
+		}
+		if(count($id_list) == 0)
+			return null;
+		$min_id = min($id_list);
+
+		foreach($this->threads as $thread)
+        {
+            if($thread->id==$min_id)
+            {
+                $mainThread = $thread;                
+                break;
+            }
+        }
+
+        return $mainThread;
+    }
+
 	/**
 	 * @return array relational rules.
 	 */
@@ -779,7 +822,7 @@ class CrashReport extends CActiveRecord
 						$this->strToDate($this->receivedFrom), 
 						$this->strToDate($this->receivedTo), 'AND');						
 		}
-						
+		
 		// Perform search
 		$dataProvider = new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
