@@ -125,15 +125,25 @@ class Thread extends CActiveRecord
 		$criteria->addCondition("LOCATE('RtlUserThreadStart', symbol_name) = 0");
 		$criteria->order = 'id DESC';
 		$stackFrame = StackFrame::model()->find($criteria);
+
+		$ThreadFuncName = '';
 		if($stackFrame===null)
-			return 'n/a';
+		$ThreadFuncName = 'n/a';
 		else
 		{
 			if(isset($stackFrame->und_symbol_name))
-				return $stackFrame->und_symbol_name;
+				$ThreadFuncName = $stackFrame->und_symbol_name;
 			else 
-				return $stackFrame->symbol_name;
+				$ThreadFuncName = $stackFrame->symbol_name;
+
+			if(isset($stackFrame->module_id) && isset($stackFrame->module))
+			{
+				$moduleName = $stackFrame->module->name;
+				$ThreadFuncName = $moduleName.'!'.$ThreadFuncName;
+			}
 		}
+
+		return $ThreadFuncName;
 	}
 	
 	/**

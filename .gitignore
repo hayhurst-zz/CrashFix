@@ -41,6 +41,9 @@
 /crashfix_webapp/assets
 /crashfix_webapp/nbproject
 /crashfix_webapp/protected/runtime
+/crashfix_webapp/protected/config/user_params.ini
+/crashfix_webapp/protected/data/crashReports/*
+/crashfix_webapp/protected/data/debugInfo/*
 *.tlog
 *.pdb
 *.pch
