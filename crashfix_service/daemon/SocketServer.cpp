@@ -610,7 +610,7 @@ int CSocketServer::GetServerLicenseInfo(LPCWSTR szOutFile, std::string& sErrMsg)
 
 	if(f==NULL)
 	{
-		sErrMsg = "Error opening output file for writing";
+		sErrMsg = "Error opening output file for writing LicenseInfo file " + strconv::w2a(szOutFile) + ", error code " + std::to_string(GetLastError());
 		goto exit;
 	}
 
@@ -695,7 +695,7 @@ int CSocketServer::GetServerConfigInfo(LPCWSTR szOutFile, std::string& sErrMsg)
 
 	if(f==NULL)
 	{
-		sErrMsg = "Error opening output file for writing " + strconv::w2a(szOutFile);
+		sErrMsg = "Error opening output file for writing ConfigInfo file " + strconv::w2a(szOutFile) + ", error code " + std::to_string(GetLastError());
 		goto exit;
 	}
 
