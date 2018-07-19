@@ -79,6 +79,9 @@ BOOL CMiniDumpReader::Init(std::wstring sFileName)
         MINIDUMP_DIRECTORY* pDir = (MINIDUMP_DIRECTORY*)
             m_fm.CreateView(uOffs, sizeof(MINIDUMP_DIRECTORY));
 
+		if(!pDir)
+			continue;
+
         ULONG32 uStreamType = pDir->StreamType;
 
         MiniDumpStreamInfo si;
@@ -98,7 +101,7 @@ BOOL CMiniDumpReader::Init(std::wstring sFileName)
 
     // Read streams
 
-    for(i=0; i<m_HeaderInfo.m_uStreamCount; i++)
+    for(i=0; i<m_aStreams.size(); i++)
     {
         MiniDumpStreamInfo& si = m_aStreams[i];
 
