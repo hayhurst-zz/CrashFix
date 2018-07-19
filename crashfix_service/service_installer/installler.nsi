@@ -140,7 +140,7 @@ FunctionEnd
 !insertmacro IsUserAdmin "un."
 
 #!define LVM_GETITEMCOUNT 0x1004
-!define LVM_GETITEMTEXT 0x102D
+#!define LVM_GETITEMTEXT 0x102D
  
 Function DumpLog
   Exch $5

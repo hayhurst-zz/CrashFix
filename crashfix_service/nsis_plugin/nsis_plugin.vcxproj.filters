@@ -30,4 +30,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="nsis_plugin.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
