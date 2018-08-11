@@ -74,7 +74,7 @@ $.ajax({
         $("#daemon-check").replaceWith(msg);			
 	});
 	
-$("#btn_close").live('click', function(e)
+$("#btn_close").on('click', function(e)
 {	
 	$("#daemon-check").fadeToggle("fast");				
 });
