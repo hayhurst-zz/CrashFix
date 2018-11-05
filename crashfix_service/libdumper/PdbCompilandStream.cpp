@@ -42,7 +42,7 @@ BOOL CPdbCompilandStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream, DBI_
     //! 4.2. [DWORD - 16 byte] sequences (DWORD+16 byte checksum)
     //! 5. Some section follows. Leading 4 bytes is the size (size doesn't include 4 bytes).
 
-    BOOL bResult=FALSE;
+    BOOL bResult = FALSE;
     DWORD dwOffs = 0;
     std::string str;
     std::string sParamName;
@@ -70,7 +70,7 @@ BOOL CPdbCompilandStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream, DBI_
     if(m_dwCompilandType == CT_RESFILE)
     {
         // Resource file
-        bResult = true;
+        bResult = TRUE;
         goto cleanup;
     }
     else if(m_dwCompilandType != CT_OBJMODULE)
@@ -104,7 +104,7 @@ BOOL CPdbCompilandStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream, DBI_
         if(!bRead || dwBytesRead!=sizeof(BLOCK_HEADER_32))
         {
             // End of file reached
-            bResult = true;
+            bResult = TRUE;
             goto cleanup;
         }
 
@@ -119,7 +119,7 @@ BOOL CPdbCompilandStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream, DBI_
                 if(!bRead || dwBytesRead!=sizeof(BLOCK_HEADER_32))
                 {
                     // It seems there is no source checsums
-                    bResult = true;
+                    bResult = TRUE;
                     goto cleanup;
                 }
 
@@ -237,9 +237,12 @@ BOOL CPdbCompilandStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream, DBI_
         m_aNumbers.push_back(dwNumber);
     }
 
-    bResult=TRUE;
+    bResult = TRUE;
 
 cleanup:
+
+	if(m_pPdbReader == nullptr)
+		bResult = FALSE;
 
     m_bInitialized = bResult;
 
