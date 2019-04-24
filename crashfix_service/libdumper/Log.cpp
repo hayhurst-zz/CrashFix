@@ -48,6 +48,7 @@ BOOL CLog::init(std::wstring sPath, bool bRedirectStdStreams)
 
     if(!bRedirectStdStreams)
     {
+		wprintf(L"Open log file: %s\n", sPath.c_str());
 
     	if(sPath.compare(L"stdout")==0)
         {
@@ -194,6 +195,12 @@ void CLog::print_timestamp()
 
 void CLog::write(int level, const char* fmt, ...)
 {
+	{
+		va_list args;
+		va_start(args, fmt);
+		vprintf(fmt, args);
+	}
+
 	if(m_path.empty()) 
 		return;
 	if(level<=m_level && m_LogFile!=NULL)

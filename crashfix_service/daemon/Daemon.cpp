@@ -180,7 +180,7 @@ start:
 
 int CDaemon::ReadPidFile()
 {
-    // Open fipdfile
+    // Open pidfile
 	FILE* f = fopen(m_sPIDFile.c_str(), "rt");
 	if(f==NULL)
 	{
@@ -299,6 +299,7 @@ void CDaemon::ReadConfig()
 		m_sConfigFile = "/etc/crashfix/crashfixd.conf";
 #endif
 	}
+	printf("ReadConfig: %s\n", m_sConfigFile.c_str());
 
 	// Check config file - does it exist?
 	struct stat st;
@@ -773,6 +774,10 @@ void CDaemon::Die(const char* szMessage, bool bUsePStr)
 		perror(szMessage);
 	else
 		printf("%s\n", szMessage);
+#endif
+
+#ifdef _DEBUG
+	DebugBreak();
 #endif
 
 	// Exit with error
