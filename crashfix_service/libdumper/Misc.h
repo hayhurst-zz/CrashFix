@@ -30,7 +30,7 @@ void SplitFileName(std::wstring sPath, std::wstring& sDirectory, std::wstring& s
 bool IsDirExisting(std::wstring sPath);
 
 //! Is a file existing
-bool IsDFileExisting(std::wstring sPath);
+bool IsFileExisting(std::wstring sPath);
 
 //! Creates a directory
 int CreateDir(std::wstring sPath);

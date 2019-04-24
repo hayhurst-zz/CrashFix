@@ -569,7 +569,7 @@ bool CPdbCache::TryPdbFile(std::wstring sPdbFileName, std::wstring sPeFileName,
 	FixSlashesInFilePath(sPeFileName);
 
 	// Check if file exists on disk
-	BOOL bExists = IsDFileExisting(sPdbFileName);
+	BOOL bExists = IsFileExisting(sPdbFileName);
 	if(!bExists)
 	{
 		// File does not exist.

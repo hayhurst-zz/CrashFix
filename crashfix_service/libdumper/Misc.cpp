@@ -114,7 +114,7 @@ bool IsDirExisting(std::wstring sPath)
 	return true;
 }
 
-bool IsDFileExisting(std::wstring sPath)
+bool IsFileExisting(std::wstring sPath)
 {
 #ifdef _WIN32
 	DWORD dwAttrs = GetFileAttributesW(sPath.c_str());
