@@ -331,7 +331,7 @@ class Project extends CActiveRecord
 	/**
 	 * Returns count of debug info files in this project.
 	 * @param integer  $totalFileSize Total file size in bytes.
-	 * @param integer $percentOfDiskQuota Percent of disk quita.
+	 * @param integer $percentOfDiskQuota Percent of disk quota.
 	 * @return integer file count.
 	 */
 	public function getDebugInfoCount(&$totalFileSize, &$percentOfDiskQuota)
