@@ -70,6 +70,10 @@
     </p>
     
     <p>
+        <?php echo $errorMsg ?>
+    </p>
+
+    <p>
         Recommended solution:
     </p>
 

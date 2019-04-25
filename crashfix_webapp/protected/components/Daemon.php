@@ -101,7 +101,7 @@ class Daemon extends CApplicationComponent
                         if($curDir!=$webRootDir)
                         {
                             $retCode = self::DAEMON_CHECK_BAD_WEB_ROOT_DIR;
-                            $errorMsg = 'Daemon configuration is incorrect (WEB_ROOT_DIR parameter does not point to this web application\'s installation directory)';                
+                            $errorMsg = "WEB_ROOT_DIR = $webRootDir <br> web app dir = $curDir";
                         }                              
                     }               
                 }
