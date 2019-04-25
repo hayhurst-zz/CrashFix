@@ -311,9 +311,9 @@ bool CLog::check_error_log_size()
     }
 
     struct stat st;
-    const char* szFileName = strconv::w2utf8(m_path).c_str();
+    std::string szFileName = strconv::w2utf8(m_path);
 
-    if(stat(szFileName, &st)!=0)
+    if(stat(szFileName.c_str(), &st)!=0)
     {
         write(1, "check_error_log_size: couldn't stat log file.\n");
         return false;
