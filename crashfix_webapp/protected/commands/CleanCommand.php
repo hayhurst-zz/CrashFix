@@ -84,14 +84,14 @@ class CleanCommand extends CConsoleCommand
 		$index = 1;
 		$start_time = new DateTime;
 		foreach ($reports as $report) {
-			echo "[" . $index++ . "/" . sizeof($reports) . "] deleting CrashReport created on " . date("Y-m-d H:i:s", $report->date_created) . "\n";
+			echo "[" . $index++ . "/" . sizeof($reports) . "] deleting CrashReport received on " . date("Y-m-d H:i:s", $report->received) . "\n";
 			if(!$report->delete())
 			{
 				throw new CHttpException(404, 'The specified record doesn\'t exist in the database or could not be deleted.');
 			}
 			//sleep(1);
 
-			if($index % 10 == 1)
+			if($index % 100 == 1)
 			{
 				$stop_time = new DateTime;
 				echo $index - 1 ." reports deleted, elapsed time = " . $stop_time->diff($start_time)->format("%h:%i:%s\n");
