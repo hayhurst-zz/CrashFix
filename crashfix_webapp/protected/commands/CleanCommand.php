@@ -16,6 +16,16 @@ class CleanCommand extends CConsoleCommand
 		Yii::log("Entering the method run()", "info");
 		echo "Entering the method run()\n";
 
+		// dump memory start
+		if (extension_loaded('tideways_xhprof')) {
+			tideways_xhprof_enable(
+				TIDEWAYS_XHPROF_FLAGS_MEMORY_MU |
+					TIDEWAYS_XHPROF_FLAGS_MEMORY_PMU |
+					TIDEWAYS_XHPROF_FLAGS_MEMORY_ALLOC
+				//TIDEWAYS_XHPROF_FLAGS_MEMORY_ALLOC_AS_MU
+			);
+		}
+
 		//echo "cmdline args = " . var_export($args, TRUE) . "\n";
 
 		$keys = ["project", "appver", "limit"];
@@ -83,22 +93,42 @@ class CleanCommand extends CConsoleCommand
 		//$reports = array_merge($reports, $reports, $reports, $reports, $reports, $reports, $reports);
 		$index = 1;
 		$start_time = new DateTime;
-		foreach ($reports as $report) {
+		foreach ($reports as &$report) {
 			echo "[" . $index++ . "/" . sizeof($reports) . "] deleting CrashReport received on " . date("Y-m-d H:i:s", $report->received) . "\n";
-			if(!$report->delete())
-			{
+			if (!$report->delete()) {
 				throw new CHttpException(404, 'The specified record doesn\'t exist in the database or could not be deleted.');
 			}
+			$report = null;
 			//sleep(1);
 
-			if($index % 100 == 1)
-			{
+			$mem_usage = memory_get_usage();
+			if($mem_usage > 500 * 1024 * 1024){
+				echo "Memory usage = " . round($mem_usage / 1024 / 1024) . "MB\n";
+				echo "Out of memory, exit now!\n";
+				return 1;
+			}
+
+			if ($index % 10 == 1) {
 				$stop_time = new DateTime;
-				echo $index - 1 ." reports deleted, elapsed time = " . $stop_time->diff($start_time)->format("%h:%i:%s\n");
+				echo $index - 1 . " reports deleted, elapsed time = " . $stop_time->diff($start_time)->format("%h:%i:%s\n");
+				echo "Memory usage = " . round($mem_usage / 1024 / 1024) . "MB\n";
 			}
 		}
 		$stop_time = new DateTime;
 		echo sizeof($reports) . " reports deleted, elapsed time = " . $stop_time->diff($start_time)->format("%h:%i:%s\n");
+
+		// dump memory stop
+		if (extension_loaded('tideways_xhprof')) {
+			$data = tideways_xhprof_disable();
+			file_put_contents(
+				sprintf("%s/%d.yourapp.xhprof", "c:/temp", getmypid()),
+				serialize($data)
+			);
+			file_put_contents(
+				sprintf("%s/%d.yourapp.xhprof.json", "c:/temp", getmypid()),
+				json_encode($data)
+			);
+		}
 
 		// Success
 		Yii::log("Leaving the method run()", "info");

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 class StatCommand extends CConsoleCommand
 {
@@ -16,6 +16,16 @@ class StatCommand extends CConsoleCommand
 		Yii::log("Entering the method run()", "info");
 		echo "Entering the method run()\n";
 
+		// dump memory start
+		if (extension_loaded('tideways_xhprof')) {
+			tideways_xhprof_enable(
+				TIDEWAYS_XHPROF_FLAGS_MEMORY_MU |
+				TIDEWAYS_XHPROF_FLAGS_MEMORY_PMU |
+				TIDEWAYS_XHPROF_FLAGS_MEMORY_ALLOC
+				//TIDEWAYS_XHPROF_FLAGS_MEMORY_ALLOC_AS_MU
+			);
+		}		
+	
 		//echo "cmdline args = " . var_export($args, TRUE) . "\n";
 
 		$keys = ["project", "appver", "limit"];
@@ -78,6 +88,19 @@ class StatCommand extends CConsoleCommand
 			}
 			if (!$found_ver)
 				echo " appver: $v_appVer, no report found\n";
+		}
+
+		// dump memory stop
+		if (extension_loaded('tideways_xhprof')) {
+			$data = tideways_xhprof_disable();
+			file_put_contents(
+				sprintf("%s/%d.yourapp.xhprof", "c:/temp", getmypid()),
+				serialize($data)
+			);
+			file_put_contents(
+				sprintf("%s/%d.yourapp.xhprof.json", "c:/temp", getmypid()),
+				json_encode($data)
+			);
 		}
 
 		// Success
