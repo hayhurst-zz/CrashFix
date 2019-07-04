@@ -317,7 +317,8 @@ class CrashReport extends CActiveRecord
 		$criteria = new CDbCriteria();		
 		$criteria->compare('project_id', $this->project_id);
 		$criteria->compare('appversion_id', $this->appversion_id);
-        $criteria->compare('md5', $crashGroupMD5);
+		$criteria->compare('md5', $crashGroupMD5);
+		$criteria->compare('title', $crashGroupTitle);
 		
 		// Look for existing crash group
 		$crashGroup = CrashGroup::model()->find($criteria);

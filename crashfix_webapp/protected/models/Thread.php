@@ -93,23 +93,42 @@ class Thread extends CActiveRecord
 		// Walk through stack frames
 		foreach($stackFrames as $stackFrame)
 		{
-			if ($length >= 3) break;
-            		// if(isset($stackFrame->module))
-            		// {
-                	// 	// Ingore this stack frame if it belongs to CrashRpt module
-                	// 	if(0!=preg_match('/^CrashRpt([0-9]{4})(d{0,1}){0,1}\.dll$/', $stackFrame->module->name))
-                    // 		continue;	
-            		// }
+			if ($length >= 3) 
+				break;
+
+			// if(isset($stackFrame->module))
+			// {
+			// 	// Ingore this stack frame if it belongs to CrashRpt module
+			// 	if(0!=preg_match('/^CrashRpt([0-9]{4})(d{0,1}){0,1}\.dll$/', $stackFrame->module->name))
+			// 		continue;	
+			// }
 			
 			//$title = $stackFrame->title;
-			$title .= $stackFrame->getShortTitle();
+
+			$short_title = $stackFrame->getShortTitle();
+			if($this->ignoreStackFrame($short_title))
+				continue;
+
+			$title .= $short_title;
 			$length++;
 		}
 		
 		// Return stack frame title.
 		return $title;		
 	}
-	
+
+	private function ignoreStackFrame($short_title)
+	{
+		$ignored_tokens = array("NtUserMessageCall", "SendMessageWorker");
+		foreach($ignored_tokens as $token)
+		{
+			if (strpos($short_title, $token) !== false) 
+				return true;
+		}
+
+		return false;
+	}
+		
 	/**
 	 * Scans stack trace for this thread and retrieves the uppermost frame 
 	 * with symbol information. The information is considered as thread entry 
