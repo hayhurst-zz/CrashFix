@@ -10,7 +10,8 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 
 set(CMAKE_C_FLAGS "-m32")
-set(CMAKE_CXX_FLAGS "-m32")
+set(CMAKE_CXX_FLAGS "-m32 -std=c++11")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,/opt/rh/devtoolset-8/root/usr/lib/gcc/x86_64-redhat-linux/8/32")
 
 set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")

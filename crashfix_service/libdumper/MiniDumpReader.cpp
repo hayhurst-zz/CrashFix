@@ -1037,3 +1037,4 @@ int CMiniDumpReader::GetMemRangeCount()
 
      return &m_aMemRanges[nMemRange];
  }
+

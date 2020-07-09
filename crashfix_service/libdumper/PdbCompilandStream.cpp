@@ -241,7 +241,7 @@ BOOL CPdbCompilandStream::Init(CPdbReader* pPdbReader, CMsfStream* pStream, DBI_
 
 cleanup:
 
-	if(m_pPdbReader == nullptr)
+	if(m_pPdbReader == NULL)
 		bResult = FALSE;
 
     m_bInitialized = bResult;

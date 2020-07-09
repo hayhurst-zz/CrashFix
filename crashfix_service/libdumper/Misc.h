@@ -75,6 +75,12 @@ void FixSlashesInFilePath(std::wstring& sPath);
 //! split string by separator
 void split_string(const std::wstring& s, const std::wstring& split, std::vector<std::wstring>& result);
 
+//! Return folder of file path
+std::wstring GetFileFolder(std::wstring sPath);
+
+//! Returns parent directory name
+std::wstring GetParentDir(std::wstring sPath);
+
 #ifdef _WIN32
 
 //! Spawns another process and, optionally, blocks until it extis
@@ -89,14 +95,8 @@ std::wstring GetModulePath(HMODULE hModule);
 //! Returns module name
 std::wstring GetModuleName(HMODULE hModule);
 
-//! Returns parent directory name
-std::wstring GetParentDir(std::wstring sPath);
-
 //! Return normalized path
 std::wstring GetNormalizedPath(std::wstring sPath);
-
-//! Return folder of file path
-std::wstring GetFileFolder(std::wstring sPath);
 
 //! Return file name of file path
 std::wstring GetFileName(std::wstring sPath);

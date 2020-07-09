@@ -148,13 +148,14 @@ void CLog::print_timestamp()
 	// get current time
 	time_t cur_time = 0;
 	time(&cur_time);
-	TCHAR szDateTime[64] = _T("");
-
 	struct tm* ltimeinfo = localtime(&cur_time );
+
 #ifndef _WIN32
+        char szDateTime[64] = "";
 	strftime(szDateTime, 63,  "%a, %d %b %Y %H:%M:%S %Z", ltimeinfo);
 	fprintf(m_LogFile, "[%s] ", szDateTime);
 #else
+	TCHAR szDateTime[64] = _T("");
 	TIME_ZONE_INFORMATION tzi;
 	GetTimeZoneInformation(&tzi);
 

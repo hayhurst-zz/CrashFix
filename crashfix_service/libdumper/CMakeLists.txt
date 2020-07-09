@@ -13,7 +13,7 @@ endif(WIN32)
 if(UNIX)
 	list(REMOVE_ITEM source_files ./DbgHelpDumpWriter.cpp ./MiniDumpWriterImpl.cpp
                            ./RegProfile.cpp ./HttpRequestSender.cpp ./AssyncNotification.cpp 
-                           ./Uploader.cpp)
+                           ./Uploader.cpp ./StackFrame.cpp ./StackDumper.cpp)
 endif(UNIX)
 
 # Enable precompiled headers to improve compilation speed

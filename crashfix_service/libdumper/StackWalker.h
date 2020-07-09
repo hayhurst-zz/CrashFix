@@ -9,9 +9,9 @@
 #define USE_DBGHLP 222
 #define USE_DBGENG 333
 
-//#define WIN32_DBG_API USE_NATIVE
+#define WIN32_DBG_API USE_NATIVE
 //#define WIN32_DBG_API USE_DBGHLP
-#define WIN32_DBG_API USE_DBGENG
+//#define WIN32_DBG_API USE_DBGENG
 
 #if WIN32_DBG_API == USE_DBGENG
 #include "StackFrame.h"

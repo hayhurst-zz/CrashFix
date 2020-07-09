@@ -231,7 +231,8 @@ struct MiniDumpMemRange
 //! Describes system memory info
 struct MiniDumpSysMemInfo
 {
-	ULONG64 m_uPhysicalMemSize = 0;  //!< Usable Physical Memory Size
+    MiniDumpSysMemInfo () : m_uPhysicalMemSize(0) { }
+	ULONG64 m_uPhysicalMemSize;  //!< Usable Physical Memory Size
 };
 
 //! Minidump block internal layout

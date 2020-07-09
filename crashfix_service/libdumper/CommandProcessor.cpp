@@ -986,7 +986,11 @@ int CCommandProcessor::DumpCrashReport(LPCWSTR szCrashRptFileName, LPCWSTR szOut
 	{
 		std::wstring sSearchDir(szSymbolSearchDir);
 		std::vector<std::wstring> dirs;
+#ifdef _WIN32
 		split_string(sSearchDir, _T(";"), dirs);
+#else
+		split_string(sSearchDir, L";", dirs);
+#endif
 		for(auto& dir : dirs)
 			m_pPdbCache->AddPdbSearchDir(dir, PDB_SYMBOL_STORE, true);
 	}

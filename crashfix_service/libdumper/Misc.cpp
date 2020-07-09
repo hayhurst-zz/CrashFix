@@ -104,7 +104,7 @@ bool IsDirExisting(std::wstring sPath)
 		return false; // Directory does not exist.
 #else
 	struct stat st_buf;
-	int status = stat(strconv::w2a(local_path).c_str(), &st_buf);
+	int status = stat(strconv::w2a(sPath).c_str(), &st_buf);
 	if (status != 0)
 		return false;
 
@@ -122,7 +122,7 @@ bool IsFileExisting(std::wstring sPath)
 		return false; // File does not exist.
 #else
 	struct stat st_buf;
-	int status = stat(strconv::w2a(local_path).c_str(), &st_buf);
+	int status = stat(strconv::w2a(sPath).c_str(), &st_buf);
 	if (status != 0)
 		return false;
 

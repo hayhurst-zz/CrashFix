@@ -13,7 +13,7 @@ be found in the Authors.txt file in the root of the source tree.
 
 #include <map>
 #include <vector>
-#include <atlstr.h>
+//#include <atlstr.h>
 
 typedef DWORD RVA;
 class CStackFrame;

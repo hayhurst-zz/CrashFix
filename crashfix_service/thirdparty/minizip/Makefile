@@ -35,19 +35,25 @@ CMAKE_COMMAND = /usr/bin/cmake
 # The command to remove a file.
 RM = /usr/bin/cmake -E remove -f
 
+# Escaping for special characters.
+EQUALS = =
+
+# The program to use to edit the cache.
+CMAKE_EDIT_COMMAND = /usr/bin/ccmake
+
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/devel/dumper/trunk
+CMAKE_SOURCE_DIR = /home/james/downloads/CrashFix/crashfix_service
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/devel/dumper/trunk
+CMAKE_BINARY_DIR = /home/james/downloads/CrashFix/crashfix_service
 
 #=============================================================================
 # Targets provided globally by CMake.
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running interactive CMake command-line interface..."
-	/usr/bin/cmake -i .
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -98,7 +104,7 @@ list_install_components/fast: list_install_components
 # Special rule for the target package
 package: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Run CPack packaging tool..."
-	cd /home/devel/dumper/trunk && /usr/bin/cpack --config ./CPackConfig.cmake
+	cd /home/james/downloads/CrashFix/crashfix_service && /usr/bin/cpack --config ./CPackConfig.cmake
 .PHONY : package
 
 # Special rule for the target package
@@ -108,7 +114,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Run CPack packaging tool for source..."
-	cd /home/devel/dumper/trunk && /usr/bin/cpack --config ./CPackSourceConfig.cmake /home/devel/dumper/trunk/CPackSourceConfig.cmake
+	cd /home/james/downloads/CrashFix/crashfix_service && /usr/bin/cpack --config ./CPackSourceConfig.cmake /home/james/downloads/CrashFix/crashfix_service/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -127,14 +133,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/devel/dumper/trunk && $(CMAKE_COMMAND) -E cmake_progress_start /home/devel/dumper/trunk/CMakeFiles /home/devel/dumper/trunk/thirdparty/minizip/CMakeFiles/progress.marks
-	cd /home/devel/dumper/trunk && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/devel/dumper/trunk/CMakeFiles 0
+	cd /home/james/downloads/CrashFix/crashfix_service && $(CMAKE_COMMAND) -E cmake_progress_start /home/james/downloads/CrashFix/crashfix_service/CMakeFiles /home/james/downloads/CrashFix/crashfix_service/thirdparty/minizip/CMakeFiles/progress.marks
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/james/downloads/CrashFix/crashfix_service/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/devel/dumper/trunk && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/clean
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/clean
 .PHONY : clean
 
 # The main clean target
@@ -143,22 +149,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/devel/dumper/trunk && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/preinstall
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/devel/dumper/trunk && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/preinstall
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/devel/dumper/trunk && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/james/downloads/CrashFix/crashfix_service && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 thirdparty/minizip/CMakeFiles/minizip.dir/rule:
-	cd /home/devel/dumper/trunk && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/CMakeFiles/minizip.dir/rule
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f CMakeFiles/Makefile2 thirdparty/minizip/CMakeFiles/minizip.dir/rule
 .PHONY : thirdparty/minizip/CMakeFiles/minizip.dir/rule
 
 # Convenience name for target.
@@ -167,7 +173,7 @@ minizip: thirdparty/minizip/CMakeFiles/minizip.dir/rule
 
 # fast build rule for target.
 minizip/fast:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/build
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/build
 .PHONY : minizip/fast
 
 ioapi.o: ioapi.c.o
@@ -175,7 +181,7 @@ ioapi.o: ioapi.c.o
 
 # target to build an object file
 ioapi.c.o:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/ioapi.c.o
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/ioapi.c.o
 .PHONY : ioapi.c.o
 
 ioapi.i: ioapi.c.i
@@ -183,7 +189,7 @@ ioapi.i: ioapi.c.i
 
 # target to preprocess a source file
 ioapi.c.i:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/ioapi.c.i
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/ioapi.c.i
 .PHONY : ioapi.c.i
 
 ioapi.s: ioapi.c.s
@@ -191,7 +197,7 @@ ioapi.s: ioapi.c.s
 
 # target to generate assembly for a file
 ioapi.c.s:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/ioapi.c.s
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/ioapi.c.s
 .PHONY : ioapi.c.s
 
 miniunz.o: miniunz.c.o
@@ -199,7 +205,7 @@ miniunz.o: miniunz.c.o
 
 # target to build an object file
 miniunz.c.o:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/miniunz.c.o
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/miniunz.c.o
 .PHONY : miniunz.c.o
 
 miniunz.i: miniunz.c.i
@@ -207,7 +213,7 @@ miniunz.i: miniunz.c.i
 
 # target to preprocess a source file
 miniunz.c.i:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/miniunz.c.i
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/miniunz.c.i
 .PHONY : miniunz.c.i
 
 miniunz.s: miniunz.c.s
@@ -215,7 +221,7 @@ miniunz.s: miniunz.c.s
 
 # target to generate assembly for a file
 miniunz.c.s:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/miniunz.c.s
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/miniunz.c.s
 .PHONY : miniunz.c.s
 
 minizip.o: minizip.c.o
@@ -223,7 +229,7 @@ minizip.o: minizip.c.o
 
 # target to build an object file
 minizip.c.o:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/minizip.c.o
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/minizip.c.o
 .PHONY : minizip.c.o
 
 minizip.i: minizip.c.i
@@ -231,7 +237,7 @@ minizip.i: minizip.c.i
 
 # target to preprocess a source file
 minizip.c.i:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/minizip.c.i
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/minizip.c.i
 .PHONY : minizip.c.i
 
 minizip.s: minizip.c.s
@@ -239,7 +245,7 @@ minizip.s: minizip.c.s
 
 # target to generate assembly for a file
 minizip.c.s:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/minizip.c.s
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/minizip.c.s
 .PHONY : minizip.c.s
 
 mztools.o: mztools.c.o
@@ -247,7 +253,7 @@ mztools.o: mztools.c.o
 
 # target to build an object file
 mztools.c.o:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/mztools.c.o
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/mztools.c.o
 .PHONY : mztools.c.o
 
 mztools.i: mztools.c.i
@@ -255,7 +261,7 @@ mztools.i: mztools.c.i
 
 # target to preprocess a source file
 mztools.c.i:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/mztools.c.i
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/mztools.c.i
 .PHONY : mztools.c.i
 
 mztools.s: mztools.c.s
@@ -263,7 +269,7 @@ mztools.s: mztools.c.s
 
 # target to generate assembly for a file
 mztools.c.s:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/mztools.c.s
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/mztools.c.s
 .PHONY : mztools.c.s
 
 unzip.o: unzip.c.o
@@ -271,7 +277,7 @@ unzip.o: unzip.c.o
 
 # target to build an object file
 unzip.c.o:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/unzip.c.o
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/unzip.c.o
 .PHONY : unzip.c.o
 
 unzip.i: unzip.c.i
@@ -279,7 +285,7 @@ unzip.i: unzip.c.i
 
 # target to preprocess a source file
 unzip.c.i:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/unzip.c.i
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/unzip.c.i
 .PHONY : unzip.c.i
 
 unzip.s: unzip.c.s
@@ -287,7 +293,7 @@ unzip.s: unzip.c.s
 
 # target to generate assembly for a file
 unzip.c.s:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/unzip.c.s
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/unzip.c.s
 .PHONY : unzip.c.s
 
 zip.o: zip.c.o
@@ -295,7 +301,7 @@ zip.o: zip.c.o
 
 # target to build an object file
 zip.c.o:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/zip.c.o
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/zip.c.o
 .PHONY : zip.c.o
 
 zip.i: zip.c.i
@@ -303,7 +309,7 @@ zip.i: zip.c.i
 
 # target to preprocess a source file
 zip.c.i:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/zip.c.i
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/zip.c.i
 .PHONY : zip.c.i
 
 zip.s: zip.c.s
@@ -311,7 +317,7 @@ zip.s: zip.c.s
 
 # target to generate assembly for a file
 zip.c.s:
-	cd /home/devel/dumper/trunk && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/zip.c.s
+	cd /home/james/downloads/CrashFix/crashfix_service && $(MAKE) -f thirdparty/minizip/CMakeFiles/minizip.dir/build.make thirdparty/minizip/CMakeFiles/minizip.dir/zip.c.s
 .PHONY : zip.c.s
 
 # Help Target
@@ -358,6 +364,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/devel/dumper/trunk && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/james/downloads/CrashFix/crashfix_service && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

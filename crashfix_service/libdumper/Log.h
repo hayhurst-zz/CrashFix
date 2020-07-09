@@ -5,6 +5,7 @@
 
 #pragma once
 #include "stdafx.h"
+#include "strconv.h"
 
 //! \class CLog
 //! \brief Maintains a log file.
@@ -70,7 +71,7 @@ public:
 
     CLogEvent(int level, std::wstring name)
     {
-        g_log.write(level, "Entering: %s\n", (LPCSTR)CW2A(name.c_str(), CP_UTF8));
+        g_log.write(level, "Entering: %s\n", (LPCSTR)strconv::w2a(name.c_str()).c_str());
         m_start = clock();
         m_level = level;
         m_name = name;
@@ -79,7 +80,7 @@ public:
     ~CLogEvent()
     {
         clock_t finish = clock();
-        g_log.write(m_level, "Leaving: %s.    ", (LPCSTR)CW2A(m_name.c_str(), CP_UTF8));
+        g_log.write(m_level, "Leaving: %s.    ", (LPCSTR)strconv::w2a(m_name.c_str()).c_str());
         double timeElapsed = (double)(finish - m_start) / CLOCKS_PER_SEC;
         g_log.write(m_level, "Completed in: %0.3f sec.\n", timeElapsed);
     }
