@@ -392,6 +392,71 @@ void split_string(const std::wstring& s, const std::wstring& split, std::vector<
 	result.push_back(s.substr(pos_begin));
 }
 
+std::wstring GetFileFolder(std::wstring sPath)
+{
+	std::wstring file_folder = sPath;
+	size_t pos = sPath.rfind(L'\\');
+	if (pos != sPath.npos)
+	{
+		file_folder = sPath.substr(0, pos);
+	}
+	return file_folder;
+}
+
+std::wstring GetParentDir(std::wstring sPath)
+{
+	int pos = sPath.rfind(L'\\');
+	if(pos!=sPath.npos)
+		sPath = sPath.substr(0, pos);
+	return sPath;
+}
+
+void use_app_data_auto(std::wstring& sPath)
+{
+#ifdef _WIN32
+
+	do
+	{
+		if (sPath == L"stdout")
+			break;
+
+		sPath = GetNormalizedPath(sPath);
+
+		std::wstring file_name = GetFileName(sPath);
+		std::wstring file_folder = GetFileFolder(sPath);
+
+		std::wstring programs_folder;
+		TCHAR szBuf[MAX_PATH] = { 0 };
+		if (::SHGetSpecialFolderPath(NULL, szBuf, CSIDL_PROGRAM_FILES, TRUE))
+			programs_folder = szBuf;
+		if (programs_folder.empty())
+			break;
+
+		if (file_folder.find(programs_folder) == std::wstring::npos)
+			break;
+
+		// change to app_data shared by SYSTEM account and user account (C:\ProgramData)
+		std::wstring app_data_folder;
+		if (::SHGetSpecialFolderPath(NULL, szBuf, CSIDL_COMMON_APPDATA, TRUE))
+			app_data_folder = szBuf;
+		if (app_data_folder.empty())
+			break;
+
+		file_folder = app_data_folder + _T("\\CrashFix\\logs\\");
+		sPath = file_folder + file_name;
+
+	} while (false);
+
+#endif
+}
+
+void use_app_data_auto(std::string& sPath)
+{
+	std::wstring path = strconv::a2w(sPath);
+	use_app_data_auto(path);
+	sPath = strconv::w2a(path);
+}
+
 #ifdef _WIN32
 
 int execute(const char* szCmdLine, bool bWait, DWORD* pnPid)
@@ -455,14 +520,6 @@ std::wstring GetModulePath(HMODULE hModule)
 	return std::wstring(szBuf);
 }
 
-std::wstring GetParentDir(std::wstring sPath)
-{
-	int pos = sPath.rfind(L'\\');
-	if(pos!=sPath.npos)
-		sPath = sPath.substr(0, pos);
-	return sPath;
-}
-
 std::wstring GetNormalizedPath(std::wstring sPath)
 {
 #ifdef _WIN32
@@ -478,17 +535,6 @@ std::wstring GetNormalizedPath(std::wstring sPath)
 #endif
 }
 
-std::wstring GetFileFolder(std::wstring sPath)
-{
-	std::wstring file_folder = sPath;
-	size_t pos = sPath.rfind(L'\\');
-	if (pos != sPath.npos)
-	{
-		file_folder = sPath.substr(0, pos);
-	}
-	return file_folder;
-}
-
 std::wstring GetFileName(std::wstring sPath)
 {
 	std::wstring file_name = sPath;
@@ -498,52 +544,6 @@ std::wstring GetFileName(std::wstring sPath)
 		file_name = sPath.substr(pos + 1, std::string::npos);
 	}
 	return file_name;
-}
-
-void use_app_data_auto(std::wstring& sPath)
-{
-#ifdef _WIN32
-
-	do
-	{
-		if (sPath == L"stdout")
-			break;
-
-		sPath = GetNormalizedPath(sPath);
-
-		std::wstring file_name = GetFileName(sPath);
-		std::wstring file_folder = GetFileFolder(sPath);
-
-		std::wstring programs_folder;
-		TCHAR szBuf[MAX_PATH] = { 0 };
-		if (::SHGetSpecialFolderPath(NULL, szBuf, CSIDL_PROGRAM_FILES, TRUE))
-			programs_folder = szBuf;
-		if (programs_folder.empty())
-			break;
-
-		if (file_folder.find(programs_folder) == std::wstring::npos)
-			break;
-
-		// change to app_data shared by SYSTEM account and user account (C:\ProgramData)
-		std::wstring app_data_folder;
-		if (::SHGetSpecialFolderPath(NULL, szBuf, CSIDL_COMMON_APPDATA, TRUE))
-			app_data_folder = szBuf;
-		if (app_data_folder.empty())
-			break;
-
-		file_folder = app_data_folder + _T("\\CrashFix\\logs\\");
-		sPath = file_folder + file_name;
-
-	} while (false);
-
-#endif
-}
-
-void use_app_data_auto(std::string& sPath)
-{
-	std::wstring path = strconv::a2w(sPath);
-	use_app_data_auto(path);
-	sPath = strconv::w2a(path);
 }
 
 CString FileSizeToStr(ULONG64 uFileSize)

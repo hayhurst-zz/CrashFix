@@ -81,6 +81,10 @@ std::wstring GetFileFolder(std::wstring sPath);
 //! Returns parent directory name
 std::wstring GetParentDir(std::wstring sPath);
 
+//! modify log directory to app_data in windows if necessary
+void use_app_data_auto(std::wstring& sPath);
+void use_app_data_auto(std::string& sPath);
+
 #ifdef _WIN32
 
 //! Spawns another process and, optionally, blocks until it extis
@@ -100,10 +104,6 @@ std::wstring GetNormalizedPath(std::wstring sPath);
 
 //! Return file name of file path
 std::wstring GetFileName(std::wstring sPath);
-
-//! modify log directory to app_data in windows if necessary
-void use_app_data_auto(std::wstring& sPath);
-void use_app_data_auto(std::string& sPath);
 
 //! Converts file size number to string
 CString FileSizeToStr(ULONG64 uFileSize);

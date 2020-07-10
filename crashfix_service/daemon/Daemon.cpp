@@ -11,9 +11,9 @@
 #include "CSmtp.h"
 #include <iostream>
 #include "base64.h"
-#include "UacHelper.h"
 
 #ifdef _WIN32
+#include "UacHelper.h"
 //#include "CrashRpt.h"
 #endif
 

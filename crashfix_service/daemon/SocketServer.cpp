@@ -12,6 +12,9 @@
 #include "Outputter.h"
 #include "LibDumperVersion.h"
 
+#ifndef _WIN32
+#include <errno.h>
+#endif
 
 CSocketServer::CSocketServer()
 {
@@ -117,13 +120,13 @@ bool CSocketServer::Init(CDaemon* pDaemon, int nPort, int nMaxQueueSize, int nTo
 	}
 	else
 	{
-		m_pLog->write(0, "Add PdbSearchDir Succeed: %s\n", (LPCSTR)CW2A(sPdbSearchDir.c_str()));
+		m_pLog->write(0, "Add PdbSearchDir Succeed: %s\n", (LPCSTR)strconv::w2a(sPdbSearchDir.c_str()).c_str());
 	}
 
 	std::string additional_symbol_server = m_pDaemon->GetAdditionalSymbolServer();
 	if (!additional_symbol_server.empty())
 	{
-		bAdd = m_PdbCache.AddPdbSearchDir((LPWSTR)CA2W(additional_symbol_server.c_str()), PDB_SYMBOL_STORE, true);
+		bAdd = m_PdbCache.AddPdbSearchDir(strconv::a2w(additional_symbol_server.c_str()), PDB_SYMBOL_STORE, true);
 		if(bAdd)
 			m_pLog->write(0, "Add PdbSearchDir Succeed: %s\n", additional_symbol_server.c_str());
 		else
@@ -610,7 +613,11 @@ int CSocketServer::GetServerLicenseInfo(LPCWSTR szOutFile, std::string& sErrMsg)
 
 	if(f==NULL)
 	{
+#ifdef _WIN32
 		sErrMsg = "Error opening output file for writing LicenseInfo file " + strconv::w2a(szOutFile) + ", error code " + std::to_string(GetLastError());
+#else
+		sErrMsg = "Error opening output file for writing LicenseInfo file " + strconv::w2a(szOutFile) + ", error code " + strerror(errno);
+#endif
 		goto exit;
 	}
 
@@ -695,7 +702,11 @@ int CSocketServer::GetServerConfigInfo(LPCWSTR szOutFile, std::string& sErrMsg)
 
 	if(f==NULL)
 	{
+#ifdef _WIN32
 		sErrMsg = "Error opening output file for writing ConfigInfo file " + strconv::w2a(szOutFile) + ", error code " + std::to_string(GetLastError());
+#else
+		sErrMsg = "Error opening output file for writing ConfigInfo file " + strconv::w2a(szOutFile) + ", error code " + strerror(errno);
+#endif
 		goto exit;
 	}
 
