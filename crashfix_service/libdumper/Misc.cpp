@@ -8,6 +8,15 @@
 #pragma comment(lib, "Psapi.lib")
 #endif
 
+inline char separatorW()
+{
+#ifdef _WIN32
+    return L'\\';
+#else
+    return L'/';
+#endif
+}
+
 double microtime()
 {
 #ifdef _WIN32
@@ -395,7 +404,7 @@ void split_string(const std::wstring& s, const std::wstring& split, std::vector<
 std::wstring GetFileFolder(std::wstring sPath)
 {
 	std::wstring file_folder = sPath;
-	size_t pos = sPath.rfind(L'\\');
+	size_t pos = sPath.rfind(separatorW());
 	if (pos != sPath.npos)
 	{
 		file_folder = sPath.substr(0, pos);
@@ -405,7 +414,7 @@ std::wstring GetFileFolder(std::wstring sPath)
 
 std::wstring GetParentDir(std::wstring sPath)
 {
-	int pos = sPath.rfind(L'\\');
+	int pos = sPath.rfind(separatorW());
 	if(pos!=sPath.npos)
 		sPath = sPath.substr(0, pos);
 	return sPath;
@@ -538,7 +547,7 @@ std::wstring GetNormalizedPath(std::wstring sPath)
 std::wstring GetFileName(std::wstring sPath)
 {
 	std::wstring file_name = sPath;
-	size_t pos = sPath.rfind(L'\\');
+	size_t pos = sPath.rfind(separatorW());
 	if (pos != sPath.npos)
 	{
 		file_name = sPath.substr(pos + 1, std::string::npos);
