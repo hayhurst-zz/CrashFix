@@ -441,6 +441,21 @@ class CrashReportController extends Controller
 	 */
 	public function actionUploadExternal()
 	{
+		$appname = "";
+		if(isset($_POST['appname']))
+			$appname = $_POST['appname'];
+
+		$appversion = "";
+		if(isset($_POST['appversion']))
+			$appversion = $_POST['appversion'];
+
+		if($appname == "BitComet")
+		{
+			$ignored = array("1.71.9.7", "1.70.8.9", "1.69.7.8", "1.68.6.15", "1.67.5.6", "1.66.4.13", "1.65.3.16", "1.64.1.13", "1.63.12.20", "1.62.11.26", "1.61", "1.60", "1.59", "1.58", "1.57", "1.56", "1.55", "1.54", "1.53", "1.52", "1.51", "1.50", "1.49");
+			if (in_array($appversion, $ignored))
+				return;
+		}
+
 		// Create new AR model 
 		$report = new CrashReport();		
 		
