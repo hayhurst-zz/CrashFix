@@ -57,6 +57,8 @@ DWORD CThread::Win32ThreadProc(LPVOID lpParam)
 {
     CThread* pThread = (CThread*)lpParam;
     pThread->m_lRetCode = pThread->ThreadProc(pThread->m_pParam);
+	CloseHandle(pThread->m_hThread);
+	pThread->m_hThread = NULL;
     return 0;
 }
 #else
@@ -72,6 +74,8 @@ void CThread::Exit(int nCode)
 {
 #ifdef _WIN32
     TerminateThread(m_hThread, nCode);
+	CloseHandle(m_hThread);
+	m_hThread = NULL;
 #else
     pthread_exit(NULL); // Terminate this thread.
 #endif
