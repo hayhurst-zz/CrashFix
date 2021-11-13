@@ -96,7 +96,8 @@ class CleanCommand extends CConsoleCommand
 		foreach ($reports as &$report) {
 			echo "[" . $index++ . "/" . sizeof($reports) . "] deleting CrashReport received on " . date("Y-m-d H:i:s", $report->received) . "\n";
 			if (!$report->delete()) {
-				throw new CHttpException(404, 'The specified record doesn\'t exist in the database or could not be deleted.');
+				//throw new CHttpException(404, 'The specified record doesn\'t exist in the database or could not be deleted.');
+				echo "The specified record doesn\'t exist in the database or could not be deleted.\n";
 			}
 			$report = null;
 			//sleep(1);
