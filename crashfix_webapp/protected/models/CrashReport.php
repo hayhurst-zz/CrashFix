@@ -318,7 +318,6 @@ class CrashReport extends CActiveRecord
 		$criteria->compare('project_id', $this->project_id);
 		$criteria->compare('appversion_id', $this->appversion_id);
 		$criteria->compare('md5', $crashGroupMD5);
-		$criteria->compare('title', $crashGroupTitle);
 		
 		// Look for existing crash group
 		$crashGroup = CrashGroup::model()->find($criteria);
@@ -646,13 +645,16 @@ class CrashReport extends CActiveRecord
             }
         }        
 		
-        // Ensure title is not too long
+		// use md5 of title instead of stack_trace_md5
+		$md5 = md5($title);
+
+		// Ensure title is not too long
         $title = MiscHelpers::addEllipsis($title, 200);
         
-		if(strlen($hash)==0)
-			$hash = md5($title);
+		// if(strlen($hash)==0)
+		// 	$hash = md5($title);
 
-		$md5 = $hash;
+		// $md5 = $hash;
 
 		return $title;
 	}
