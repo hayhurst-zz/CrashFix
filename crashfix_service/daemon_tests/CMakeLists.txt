@@ -5,7 +5,7 @@ aux_source_directory( . source_files )
 include_directories( ${CMAKE_SOURCE_DIR}/libdumper ${CMAKE_SOURCE_DIR}/daemon ${CMAKE_SOURCE_DIR}/libtest )
 
 if(UNIX)
-	ADD_PCH_RULE("stdafx.cpp"  source_files)
+#	ADD_PCH_RULE("stdafx.cpp"  source_files)
 else(UNIX)
 	ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" source_files)
 endif(UNIX)
