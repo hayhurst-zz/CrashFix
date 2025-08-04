@@ -119,7 +119,7 @@ class Thread extends CActiveRecord
 
 	private function ignoreStackFrame($short_title)
 	{
-		$ignored_tokens = array("NtUserMessageCall", "SendMessageWorker");
+		$ignored_tokens = array("NtUserMessageCall", "SendMessageWorker", "RaiseException");
 		foreach($ignored_tokens as $token)
 		{
 			if (strpos($short_title, $token) !== false) 

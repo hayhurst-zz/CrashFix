@@ -217,7 +217,7 @@ class Daemon extends CApplicationComponent
 		{		
 			// Check return code
 			if($daemonRetCode!=0)
-				throw new Exception('Daemon request has failed:' . $daemonResponce); 
+				throw new Exception('Daemon request has failed: ' . $daemonResponce); 
 		
 			// Load XML from temp file
 			$doc = simplexml_load_file($outFile);

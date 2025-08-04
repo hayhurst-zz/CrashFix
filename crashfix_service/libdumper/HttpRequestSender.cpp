@@ -37,7 +37,8 @@ BOOL CHttpRequestSender::SendAssync(CHttpRequest& Request, AssyncNotification* a
     HANDLE hThread = CreateThread(NULL, 0, WorkerThread, (void*)this, 0, NULL);
     if(hThread==NULL)
         return FALSE;
-
+	
+	CloseHandle(hThread);
     return TRUE;
 }
 
